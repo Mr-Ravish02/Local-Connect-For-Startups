@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isMasterAdmin() {
+      return isAuthenticated() && request.auth.token.email == 'mr.ravish02@gmail.com';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // 1. Users Collection
+    // - Normal users can never set or escalate their role to 'admin'
+    // - Role 'admin' cannot be created or updated via client SDK
+    match /users/{userId} {
+      // Anyone logged in can read user profile; admins can list
+      allow read: if isAuthenticated();
+
+      // Normal signup: can create own doc ONLY with role 'customer' or 'shopOwner' (NEVER 'admin')
+      allow create: if isOwner(userId)
+                    && request.resource.data.role in ['customer', 'shopOwner']
+                    && request.resource.data.role != 'admin';
+
+      // Updates: user can update own profile, but CANNOT change role to 'admin' or escalate privileges
+      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role && request.resource.data.role != 'admin')
+                    || isMasterAdmin();
+
+      // Deletion: only Master Admin
+      allow delete: if isMasterAdmin();
+    }
+
+    // 2. Shops Collection
+    match /shops/{shopId} {
+      // Publicly viewable
+      allow read: if true;
+
+      // Authenticated shop owners can create
+      allow create: if isAuthenticated();
+
+      // Owner or Master Admin can update / delete
+      allow update, delete: if isAuthenticated() && (
+        resource.data.ownerId == request.auth.uid || isMasterAdmin()
+      );
+    }
+
+    // 3. Products Collection
+    match /products/{productId} {
+      // Publicly viewable
+      allow read: if true;
+
+      // Authenticated users can create
+      allow create: if isAuthenticated();
+
+      // Shop owner or Master Admin can update / delete
+      allow update, delete: if isAuthenticated() && (
+        resource.data.shopId != null || isMasterAdmin()
+      );
+    }
+
+    // 4. Reviews Collection
+    match /reviews/{reviewId} {
+      // Publicly viewable
+      allow read: if true;
+
+      // Authenticated users can post reviews
+      allow create: if isAuthenticated();
+
+      // Review author or Master Admin (moderator) can update or delete
+      allow update, delete: if isAuthenticated() && (
+        resource.data.customerId == request.auth.uid || isMasterAdmin()
+      );
+    }
+
+    // 5. Inquiries Collection
+    match /inquiries/{inquiryId} {
+      // Customer who sent, shop owner, or admin can read
+      allow read: if isAuthenticated() && (
+        resource.data.customerId == request.auth.uid ||
+        resource.data.ownerId == request.auth.uid ||
+        isMasterAdmin()
+      );
+
+      // Authenticated users can submit inquiries
+      allow create: if isAuthenticated();
+
+      // Sender, shop owner, or admin can update / delete
+      allow update, delete: if isAuthenticated() && (
+        resource.data.customerId == request.auth.uid ||
+        resource.data.ownerId == request.auth.uid ||
+        isMasterAdmin()
+      );
+    }
+  }
+}
