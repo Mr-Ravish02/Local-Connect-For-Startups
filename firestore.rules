@@ -19,8 +19,8 @@ service cloud.firestore {
     // - Normal users can never set or escalate their role to 'admin'
     // - Role 'admin' cannot be created or updated via client SDK
     match /users/{userId} {
-      // Anyone logged in can read user profile; admins can list
-      allow read: if isAuthenticated();
+      // 1. A logged-in user can always read their own document; 2. admin can read any document
+      allow read: if isOwner(userId) || isMasterAdmin();
 
       // Normal signup: can create own doc ONLY with role 'customer' or 'shopOwner' (NEVER 'admin')
       allow create: if isOwner(userId)
