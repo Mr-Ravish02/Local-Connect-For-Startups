@@ -1,12 +1,40 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import {
+  MapPin,
+  Store,
+  Shirt,
+  Bike,
+  Phone,
+  MessageSquare,
+  Mail,
+  ArrowLeft,
+  Search as SearchIcon,
+  X,
+  Package,
+  CheckCircle,
+  AlertCircle,
+} from 'lucide-react';
 import { db } from '../firebase/config';
 import Navbar from '../components/Navbar';
 import BrowseProductCard from '../components/BrowseProductCard';
 import ShopInquiryModal from '../components/ShopInquiryModal';
 import ShopReviewsSection, { StarRating } from '../components/ShopReviewsSection';
 import './ShopDetail.css';
+
+function getShopCover(shop) {
+  if (shop?.bannerUrl) return shop.bannerUrl;
+  if (shop?.imageUrl) return shop.imageUrl;
+  if (shop?.photoUrl) return shop.photoUrl;
+  if (shop?.category === 'Clothing') {
+    return 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop&q=80';
+  }
+  if (shop?.category === 'Cycle') {
+    return 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=1200&auto=format&fit=crop&q=80';
+  }
+  return 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&auto=format&fit=crop&q=80';
+}
 
 function ShopDetail() {
   const { shopId } = useParams();
@@ -16,8 +44,6 @@ function ShopDetail() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [stockFilter, setStockFilter] = useState('all');
-  const [visibleCards, setVisibleCards] = useState(new Set());
-  const cardRefs = useRef({});
   const searchInputRef = useRef(null);
 
   // Inquiry modal state
@@ -65,27 +91,6 @@ function ShopDetail() {
     fetchShopAndProducts();
   }, [shopId]);
 
-  // Intersection Observer for staggered card entrance
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setVisibleCards((prev) => new Set([...prev, entry.target.id]));
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -30px 0px' }
-    );
-
-    Object.values(cardRefs.current).forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [products, searchTerm, stockFilter]);
-
   // Filter products
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -127,7 +132,7 @@ function ShopDetail() {
         <Navbar />
         <div className="shop-detail-loading">
           <div className="loading-spinner"></div>
-          <p>Loading shop…</p>
+          <p>Loading shop profile…</p>
         </div>
       </>
     );
@@ -138,10 +143,12 @@ function ShopDetail() {
       <>
         <Navbar />
         <div className="shop-detail-error">
-          <div className="error-icon">🔍</div>
+          <AlertCircle size={48} className="error-icon" />
           <h2>{error || 'Shop not found'}</h2>
-          <Link to="/" className="back-link">
-            ← Back to all shops
+          <p>The shop profile you are looking for may have been removed or does not exist.</p>
+          <Link to="/" className="btn btn-primary back-link" style={{ marginTop: '1rem' }}>
+            <ArrowLeft size={16} />
+            Back to All Shops
           </Link>
         </div>
       </>
@@ -152,76 +159,108 @@ function ShopDetail() {
     <>
       <Navbar />
       <main className="shop-detail" id="shop-detail-page">
-        {/* Back link */}
-        <Link to="/" className="shop-detail-back" id="back-to-shops">
-          ← Back to shops
-        </Link>
+        {/* Navigation Breadcrumb */}
+        <div className="shop-detail-topbar">
+          <Link to="/" className="shop-detail-back" id="back-to-shops">
+            <ArrowLeft size={16} />
+            <span>Back to All Shops</span>
+          </Link>
+        </div>
 
-        {/* Shop Header Card */}
+        {/* Shop Cover Banner */}
+        <div className="shop-cover-banner">
+          <img
+            src={getShopCover(shop)}
+            alt={`${shop.shopName} Storefront`}
+            className="shop-cover-img"
+          />
+        </div>
+
+        {/* Shop Profile Header Card */}
         <div className="shop-detail-header" id="shop-detail-header">
-          <div className="shop-detail-icon-wrap">
-            <span className="shop-detail-icon">
-              {shop.category === 'Clothing' ? '👗' : '🚲'}
-            </span>
-          </div>
-          <div className="shop-detail-info">
-            <div className="shop-detail-meta">
-              <span className="shop-detail-category-tag">
-                {shop.category}
-              </span>
-              {ratingStats.count > 0 ? (
-                <div className="header-rating-badge" id="header-rating-badge">
-                  <StarRating rating={Math.round(ratingStats.average)} readOnly size="0.9rem" />
-                  <span className="rating-val">{ratingStats.average}</span>
-                  <span className="rating-count">({ratingStats.count})</span>
-                </div>
-              ) : (
-                <span className="header-rating-badge new-badge">New Shop</span>
+          <div className="shop-header-main">
+            <div className="shop-detail-icon-wrap">
+              {shop.category === 'Clothing' ? <Shirt size={32} /> : <Bike size={32} />}
+            </div>
+
+            <div className="shop-detail-info">
+              <div className="shop-detail-meta">
+                <span className="shop-detail-category-tag">
+                  {shop.category === 'Clothing' && <Shirt size={13} />}
+                  {shop.category === 'Cycle' && <Bike size={13} />}
+                  {shop.category}
+                </span>
+
+                {ratingStats.count > 0 ? (
+                  <div className="header-rating-badge" id="header-rating-badge">
+                    <StarRating rating={Math.round(ratingStats.average)} readOnly size="0.95rem" />
+                    <span className="rating-val">{ratingStats.average}</span>
+                    <span className="rating-count">({ratingStats.count} reviews)</span>
+                  </div>
+                ) : (
+                  <span className="header-rating-badge new-badge">New Store</span>
+                )}
+              </div>
+
+              <h1 className="shop-detail-name">{shop.shopName}</h1>
+
+              <p className="shop-detail-address">
+                <MapPin size={16} className="address-icon" />
+                <span>{shop.address || 'Local Neighborhood Store'}</span>
+              </p>
+
+              {shop.description && (
+                <p className="shop-detail-description">{shop.description}</p>
               )}
-            </div>
-            <h1 className="shop-detail-name">{shop.shopName}</h1>
-            <p className="shop-detail-address">
-              <span>📍</span> {shop.address}
-            </p>
-            {shop.description && (
-              <p className="shop-detail-description">{shop.description}</p>
-            )}
 
-            {/* Contact Action Buttons */}
-            <div className="shop-contact-actions" id="shop-contact-actions">
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="contact-shop-btn whatsapp-btn"
-                id="contact-shop-whatsapp-btn"
-              >
-                <span className="btn-icon">💬</span>
-                Contact Shop
-              </a>
-              <button
-                type="button"
-                className="contact-shop-btn inquiry-btn"
-                onClick={() => setIsInquiryModalOpen(true)}
-                id="open-inquiry-modal-btn"
-              >
-                <span className="btn-icon">✉️</span>
-                Send Inquiry
-              </button>
+              {/* Direct Contact Actions */}
+              <div className="shop-contact-actions" id="shop-contact-actions">
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="contact-shop-btn whatsapp-btn"
+                  id="contact-shop-whatsapp-btn"
+                >
+                  <MessageSquare size={17} />
+                  <span>Chat on WhatsApp</span>
+                </a>
+
+                <button
+                  type="button"
+                  className="contact-shop-btn inquiry-btn"
+                  onClick={() => setIsInquiryModalOpen(true)}
+                  id="open-inquiry-modal-btn"
+                >
+                  <Mail size={17} />
+                  <span>Send Direct Inquiry</span>
+                </button>
+
+                {shop.phone && (
+                  <a
+                    href={`tel:${shop.phone.replace(/\D/g, '')}`}
+                    className="contact-shop-btn phone-btn"
+                  >
+                    <Phone size={15} />
+                    <span>{shop.phone}</span>
+                  </a>
+                )}
+              </div>
             </div>
           </div>
 
+          {/* Quick Metrics */}
           <div className="shop-detail-stats">
             <div className="shop-stat">
               <span className="shop-stat-value">{stats.total}</span>
-              <span className="shop-stat-label">Products</span>
+              <span className="shop-stat-label">Total Items</span>
             </div>
-            <div className="shop-stat">
-              <span className="shop-stat-value shop-stat-green">{stats.inStock}</span>
+            <div className="shop-stat stat-in-stock">
+              <span className="shop-stat-value">{stats.inStock}</span>
               <span className="shop-stat-label">In Stock</span>
             </div>
-            <div className="shop-stat">
-              <span className="shop-stat-value shop-stat-red">{stats.outOfStock}</span>
+            <div className="shop-stat stat-out-of-stock">
+              <span className="shop-stat-value">{stats.outOfStock}</span>
               <span className="shop-stat-label">Out of Stock</span>
             </div>
           </div>
@@ -230,20 +269,25 @@ function ShopDetail() {
         {/* Products Section */}
         <section className="shop-products-section" id="shop-products-section">
           <div className="shop-products-toolbar">
-            <h2 className="shop-products-title">
-              📦 Product Catalog
-            </h2>
+            <div className="toolbar-left">
+              <h2 className="shop-products-title">
+                Store Inventory & Products
+              </h2>
+              <p className="shop-products-subtitle">
+                Available items directly from this merchant
+              </p>
+            </div>
 
             {/* In-shop search & filter controls */}
             {products.length > 0 && (
               <div className="shop-products-controls">
                 <div className="shop-search-box" id="shop-product-search">
-                  <span className="shop-search-icon">🔍</span>
+                  <SearchIcon size={16} className="shop-search-icon" />
                   <input
                     ref={searchInputRef}
                     type="text"
                     className="shop-search-input"
-                    placeholder="Search this shop's products…"
+                    placeholder="Search this store's items…"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     id="shop-product-search-input"
@@ -254,25 +298,26 @@ function ShopDetail() {
                       onClick={() => setSearchTerm('')}
                       aria-label="Clear search"
                     >
-                      ✕
+                      <X size={14} />
                     </button>
                   )}
                 </div>
-                <div className="shop-stock-filters">
+
+                <div className="shop-stock-pills">
                   <button
-                    className={`shop-stock-pill ${stockFilter === 'all' ? 'active' : ''}`}
+                    className={`stock-pill ${stockFilter === 'all' ? 'active' : ''}`}
                     onClick={() => setStockFilter('all')}
                   >
-                    All ({stats.total})
+                    All ({products.length})
                   </button>
                   <button
-                    className={`shop-stock-pill ${stockFilter === 'in_stock' ? 'active' : ''}`}
+                    className={`stock-pill ${stockFilter === 'in_stock' ? 'active' : ''}`}
                     onClick={() => setStockFilter('in_stock')}
                   >
                     In Stock ({stats.inStock})
                   </button>
                   <button
-                    className={`shop-stock-pill ${stockFilter === 'out_of_stock' ? 'active' : ''}`}
+                    className={`stock-pill ${stockFilter === 'out_of_stock' ? 'active' : ''}`}
                     onClick={() => setStockFilter('out_of_stock')}
                   >
                     Out of Stock ({stats.outOfStock})
@@ -282,66 +327,63 @@ function ShopDetail() {
             )}
           </div>
 
+          {/* Product Grid */}
           {products.length === 0 ? (
             <div className="shop-products-empty">
-              <div className="empty-icon">🛍️</div>
+              <Package size={40} className="empty-icon" />
               <h3>No products listed yet</h3>
-              <p>This shop hasn't added any products to their catalog.</p>
+              <p>This shop has not uploaded items to their catalog yet.</p>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="shop-products-empty">
-              <div className="empty-icon">🔎</div>
+              <SearchIcon size={40} className="empty-icon" />
               <h3>No matching products</h3>
-              <p>Try different keywords or adjust the stock filter.</p>
+              <p>Try clearing your search keyword or stock filter.</p>
               <button
-                className="shop-reset-filters-btn"
-                onClick={() => { setSearchTerm(''); setStockFilter('all'); }}
+                className="btn btn-secondary"
+                onClick={() => {
+                  setSearchTerm('');
+                  setStockFilter('all');
+                }}
+                style={{ marginTop: '0.75rem' }}
               >
-                Reset Filters
+                Clear Filters
               </button>
             </div>
           ) : (
-            <>
-              {(searchTerm || stockFilter !== 'all') && (
-                <div className="shop-filter-status">
-                  <span>
-                    Showing {filteredProducts.length} of {products.length} products
-                    {searchTerm && <> matching "<strong>{searchTerm}</strong>"</>}
-                  </span>
+            <div className="shop-products-grid" id="shop-products-grid">
+              {filteredProducts.map((product) => (
+                <div
+                  key={product.id}
+                  id={`product-${product.id}`}
+                  className="shop-product-item"
+                >
+                  <BrowseProductCard
+                    product={product}
+                    shopName={shop.shopName}
+                    shopId={shop.id}
+                  />
                 </div>
-              )}
-              <div className="shop-products-grid" id="shop-products-grid">
-                {filteredProducts.map((product, index) => (
-                  <div
-                    key={product.id}
-                    id={`product-entry-${product.id}`}
-                    ref={(el) => { cardRefs.current[product.id] = el; }}
-                    className={`shop-product-entry ${visibleCards.has(`product-entry-${product.id}`) ? 'visible' : ''}`}
-                    style={{ '--card-index': index }}
-                  >
-                    <BrowseProductCard product={product} />
-                  </div>
-                ))}
-              </div>
-            </>
+              ))}
+            </div>
           )}
         </section>
 
         {/* Reviews Section */}
-        <section className="shop-reviews-container" id="shop-reviews-container-section">
-          <ShopReviewsSection shopId={shopId} onRatingUpdate={setRatingStats} />
-        </section>
-
-        {/* Contact Inquiry Modal */}
-        <ShopInquiryModal
-          isOpen={isInquiryModalOpen}
-          onClose={() => setIsInquiryModalOpen(false)}
-          shop={shop}
+        <ShopReviewsSection
+          shopId={shop.id}
+          onRatingUpdate={setRatingStats}
         />
       </main>
+
+      {/* Customer Inquiry Modal */}
+      <ShopInquiryModal
+        isOpen={isInquiryModalOpen}
+        onClose={() => setIsInquiryModalOpen(false)}
+        shop={shop}
+      />
     </>
   );
 }
 
 export default ShopDetail;
-

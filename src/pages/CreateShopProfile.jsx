@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { doc, setDoc } from 'firebase/firestore';
+import { Store, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserLocation } from '../utils/geolocation';
@@ -72,25 +73,33 @@ function CreateShopProfile() {
 
   return (
     <div className="auth-page" id="create-shop-page">
-      <div className="auth-card" style={{ maxWidth: 500 }}>
+      <div className="auth-card" style={{ maxWidth: 520 }}>
         <div className="auth-header">
-          <div className="auth-logo">
-            🏪 <span className="auth-logo-accent">Set Up Your Shop</span>
-          </div>
-          <h1>Create Shop Profile</h1>
-          <p>Tell customers about your business</p>
+          <Link to="/" className="auth-logo">
+            <div className="auth-logo-box">
+              <Store size={22} color="#ffffff" strokeWidth={2.4} />
+            </div>
+            <span className="auth-logo-text">LocalHive</span>
+          </Link>
+          <h1>Set Up Your Store Profile</h1>
+          <p>Tell local shoppers about your business and location</p>
         </div>
 
-        {error && <div className="auth-error" id="shop-error">{error}</div>}
+        {error && (
+          <div className="auth-error" id="shop-error">
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="shop-name">Shop Name</label>
+            <label htmlFor="shop-name">Store Name</label>
             <input
               id="shop-name"
               className="form-input"
               type="text"
-              placeholder="e.g. Pedal Power Cycles"
+              placeholder="e.g. Apex Cycle Works or City Boutique"
               value={shopName}
               onChange={(e) => setShopName(e.target.value)}
               required
@@ -106,19 +115,19 @@ function CreateShopProfile() {
               onChange={(e) => setCategory(e.target.value)}
               required
             >
-              <option value="" disabled>Select a category</option>
+              <option value="" disabled>Select business category</option>
               <option value="Clothing">Clothing</option>
               <option value="Cycle">Cycle</option>
             </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="shop-address">Address</label>
+            <label htmlFor="shop-address">Store Address</label>
             <input
               id="shop-address"
               className="form-input"
               type="text"
-              placeholder="123 Main Street, City"
+              placeholder="Shop number, street, landmark, city"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               required
@@ -126,11 +135,11 @@ function CreateShopProfile() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="shop-description">Description</label>
+            <label htmlFor="shop-description">About Your Store</label>
             <textarea
               id="shop-description"
               className="form-textarea"
-              placeholder="Tell customers what makes your shop special…"
+              placeholder="Tell customers about your products, brands, or repair services…"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
@@ -138,12 +147,12 @@ function CreateShopProfile() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="shop-phone">WhatsApp / Phone Number</label>
+            <label htmlFor="shop-phone">WhatsApp / Contact Number</label>
             <input
               id="shop-phone"
               className="form-input"
               type="text"
-              placeholder="e.g. +91 98765 43210 (for WhatsApp customer contact)"
+              placeholder="e.g. +91 98765 43210 (customers use this to message you)"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
@@ -152,9 +161,9 @@ function CreateShopProfile() {
           {/* ── Location Coordinates ── */}
           <div className="form-group">
             <label>
-              Shop Location
-              <span style={{ fontSize: '0.78rem', fontWeight: 400, color: '#94a3b8', marginLeft: '0.5rem' }}>
-                (optional)
+              Shop Coordinates
+              <span style={{ fontSize: '0.78rem', fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: '0.5rem' }}>
+                (used to calculate distance on customer searches)
               </span>
             </label>
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
@@ -184,25 +193,15 @@ function CreateShopProfile() {
               onClick={handleDetectLocation}
               disabled={detectingLocation}
               id="detect-location-btn"
+              className="btn btn-secondary"
               style={{
-                marginTop: '0.5rem',
-                padding: '0.45rem 1rem',
-                borderRadius: '8px',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
-                background: 'rgba(245, 158, 11, 0.1)',
-                color: '#fbbf24',
-                fontFamily: 'inherit',
+                marginTop: '0.65rem',
+                padding: '0.45rem 0.95rem',
                 fontSize: '0.82rem',
-                fontWeight: 600,
-                cursor: detectingLocation ? 'not-allowed' : 'pointer',
-                opacity: detectingLocation ? 0.6 : 1,
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
               }}
             >
-              📍 {detectingLocation ? 'Detecting…' : 'Use My Location'}
+              <MapPin size={14} color="var(--color-primary)" />
+              {detectingLocation ? 'Detecting current coordinates…' : 'Autofill with My Current GPS Location'}
             </button>
           </div>
 
@@ -212,7 +211,7 @@ function CreateShopProfile() {
             disabled={submitting}
             id="create-shop-submit-btn"
           >
-            {submitting ? 'Creating Shop…' : 'Create Shop Profile'}
+            {submitting ? 'Creating Profile…' : 'Complete Shop Profile'}
           </button>
         </form>
       </div>

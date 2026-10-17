@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
+import { Star, MessageSquare, Edit3, User, CheckCircle } from 'lucide-react';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -20,10 +21,11 @@ function StarRating({ rating, setRating, readOnly = false, size = '1.2rem' }) {
             style={{
               cursor: readOnly ? 'default' : 'pointer',
               fontSize: size,
-              color: isFilled ? '#fbbf24' : 'rgba(255, 255, 255, 0.2)',
+              color: isFilled ? '#f59e0b' : '#cbd5e1',
               transition: 'transform 0.15s ease, color 0.15s ease',
               transform: !readOnly && hoverRating === star ? 'scale(1.2)' : 'scale(1)',
               userSelect: 'none',
+              lineHeight: 1,
             }}
             id={!readOnly ? `star-input-${star}` : undefined}
           >
@@ -160,11 +162,11 @@ function ShopReviewsSection({ shopId, onRatingUpdate }) {
             <span className="avg-star">★</span>
           </div>
           <div className="reviews-summary-text">
-            <h3>Customer Reviews</h3>
+            <h3>Customer Reviews & Ratings</h3>
             <p>
               {reviews.length > 0
                 ? `Based on ${reviews.length} customer review${reviews.length > 1 ? 's' : ''}`
-                : 'No reviews yet. Be the first to leave a review!'}
+                : 'No reviews yet. Be the first to share your experience with this shop.'}
             </p>
           </div>
         </div>
@@ -172,28 +174,31 @@ function ShopReviewsSection({ shopId, onRatingUpdate }) {
 
       {/* Review Submission Form */}
       <div className="review-form-card" id="write-review-card">
-        <h4 className="review-form-title">✍️ Leave a Review</h4>
+        <h4 className="review-form-title">
+          <Edit3 size={18} color="var(--color-primary)" />
+          Write a Customer Review
+        </h4>
 
         {formError && <div className="review-alert error">{formError}</div>}
         {formSuccess && <div className="review-alert success">{formSuccess}</div>}
 
         <form onSubmit={handleSubmitReview}>
-          <div className="form-group" style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '0.4rem' }}>
-              Your Rating
+          <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--color-text)', fontWeight: 600, marginBottom: '0.4rem' }}>
+              Your Rating (1 to 5 Stars)
             </label>
-            <StarRating rating={rating} setRating={setRating} size="1.6rem" />
+            <StarRating rating={rating} setRating={setRating} size="1.75rem" />
           </div>
 
-          <div className="form-group" style={{ marginBottom: '1rem' }}>
-            <label htmlFor="review-comment-input" style={{ display: 'block', fontSize: '0.85rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '0.4rem' }}>
-              Your Review
+          <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+            <label htmlFor="review-comment-input" style={{ display: 'block', fontSize: '0.85rem', color: 'var(--color-text)', fontWeight: 600, marginBottom: '0.4rem' }}>
+              Your Feedback & Experience
             </label>
             <textarea
               id="review-comment-input"
               className="form-textarea"
               rows="3"
-              placeholder="Share details of your experience with this shop…"
+              placeholder="Tell others about the product quality, pricing, customer service, or shop atmosphere…"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               required
@@ -202,8 +207,7 @@ function ShopReviewsSection({ shopId, onRatingUpdate }) {
 
           <button
             type="submit"
-            className="auth-btn auth-btn-primary"
-            style={{ width: 'auto', padding: '0.65rem 1.5rem' }}
+            className="btn btn-primary"
             disabled={submitting || !comment.trim()}
             id="submit-review-btn"
           >
@@ -215,13 +219,13 @@ function ShopReviewsSection({ shopId, onRatingUpdate }) {
       {/* Reviews List */}
       <div className="reviews-list" id="reviews-list">
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
             <div className="loading-spinner" style={{ margin: '0 auto 0.5rem' }}></div>
             Loading reviews…
           </div>
         ) : reviews.length === 0 ? (
           <div className="no-reviews-box">
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>💬</div>
+            <MessageSquare size={36} color="var(--color-text-muted)" style={{ marginBottom: '0.5rem' }} />
             <p>No customer reviews written for this shop yet.</p>
           </div>
         ) : (
@@ -239,7 +243,7 @@ function ShopReviewsSection({ shopId, onRatingUpdate }) {
                     <span className="review-date">{formatDate(rev.createdAt)}</span>
                   </div>
                 </div>
-                <StarRating rating={rev.rating} readOnly size="1rem" />
+                <StarRating rating={rev.rating} readOnly size="1.05rem" />
               </div>
               <p className="review-comment-text">{rev.comment}</p>
             </div>

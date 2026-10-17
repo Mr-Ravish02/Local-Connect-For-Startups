@@ -1,4 +1,4 @@
-/* ── Shop Map Container ── */
+/* ── Shop Map: Clean Light Design ── */
 .shop-map-section {
   width: 100%;
   display: flex;
@@ -6,71 +6,71 @@
   gap: 1rem;
 }
 
-.shop-map-heading {
+.shop-map-header {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #f1f5f9;
+  gap: 0.5rem;
 }
 
-.shop-map-heading-icon {
-  font-size: 1.5rem;
+.shop-map-heading {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
 }
 
 .shop-map-container {
   width: 100%;
-  border-radius: 18px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  background: var(--color-surface);
 }
 
 .shop-map-inner {
   width: 100%;
-  height: 420px;
+  height: 400px;
 }
 
-/* ── Dark Map Tiles Override ── */
+/* ── Light Clean Map Tiles (Standard OpenStreetMap) ── */
 .shop-map-inner .leaflet-tile-pane {
-  filter: brightness(0.85) contrast(1.1) saturate(0.9);
+  filter: none;
 }
 
 /* ── Custom Popup Styling ── */
 .shop-map-inner .leaflet-popup-content-wrapper {
-  background: #1a1726;
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  color: #f1f5f9;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
   padding: 0;
 }
 
 .shop-map-inner .leaflet-popup-content {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-family);
   font-size: 0.88rem;
   line-height: 1.5;
 }
 
 .shop-map-inner .leaflet-popup-tip {
-  background: #1a1726;
-  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-top: none;
   border-left: none;
 }
 
 .shop-map-inner .leaflet-popup-close-button {
-  color: #94a3b8 !important;
-  font-size: 18px !important;
+  color: var(--color-text-muted) !important;
+  font-size: 16px !important;
   top: 6px !important;
   right: 8px !important;
 }
 
 .shop-map-inner .leaflet-popup-close-button:hover {
-  color: #f59e0b !important;
+  color: var(--color-text) !important;
 }
 
 /* ── Popup Content ── */
@@ -82,21 +82,21 @@
 .map-popup-name {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #f8fafc;
-  margin-bottom: 0.3rem;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
 }
 
 .map-popup-category {
   display: inline-block;
   padding: 0.15rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
-  margin-bottom: 0.4rem;
+  letter-spacing: 0.04em;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  margin-bottom: 0.35rem;
 }
 
 .map-popup-distance {
@@ -104,13 +104,13 @@
   align-items: center;
   gap: 0.3rem;
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   margin-top: 0.2rem;
 }
 
 .map-popup-distance-value {
-  font-weight: 600;
-  color: #fbbf24;
+  font-weight: 700;
+  color: var(--color-primary);
 }
 
 /* ── User marker popup ── */
@@ -118,7 +118,7 @@
   padding: 0.65rem 0.85rem;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #fbbf24;
+  color: #2563eb;
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -126,45 +126,41 @@
 
 /* ── Leaflet Controls ── */
 .shop-map-inner .leaflet-control-zoom {
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 10px !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) !important;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
 .shop-map-inner .leaflet-control-zoom a {
-  background: #1a1726 !important;
-  color: #f1f5f9 !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-  width: 34px !important;
-  height: 34px !important;
-  line-height: 34px !important;
-  font-size: 16px !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  font-size: 15px !important;
 }
 
 .shop-map-inner .leaflet-control-zoom a:hover {
-  background: #252236 !important;
-  color: #fbbf24 !important;
+  background: var(--color-surface-subtle) !important;
+  color: var(--color-primary) !important;
 }
 
 .shop-map-inner .leaflet-control-attribution {
-  background: rgba(15, 13, 26, 0.85) !important;
-  color: #64748b !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: var(--color-text-muted) !important;
   font-size: 0.65rem !important;
-  border-radius: 6px 0 0 0;
+  border-radius: 4px 0 0 0;
 }
 
 .shop-map-inner .leaflet-control-attribution a {
-  color: #94a3b8 !important;
+  color: var(--color-text-secondary) !important;
 }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .shop-map-inner {
-    height: 300px;
-  }
-
-  .shop-map-heading {
-    font-size: 1.15rem;
+    height: 280px;
   }
 }

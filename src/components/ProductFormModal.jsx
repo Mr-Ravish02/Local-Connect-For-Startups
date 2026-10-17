@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { Plus, Pencil, RefreshCw, Trash2, UploadCloud, X } from 'lucide-react';
 import { db } from '../firebase/config';
 import { uploadToCloudinary } from '../utils/cloudinary';
 
@@ -133,9 +134,14 @@ function ProductForm({ shopId, productToEdit, shopCategory, onClose, onSaved }) 
       onClick={(e) => e.stopPropagation()}
     >
       <div className="modal-header">
-        <h2>{isEditing ? '✏️ Edit Product' : '➕ Add New Product'}</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {isEditing ? <Pencil size={20} color="var(--color-primary)" /> : <Plus size={20} color="var(--color-primary)" />}
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>
+            {isEditing ? 'Edit Product' : 'Add New Product'}
+          </h2>
+        </div>
         <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
-          ✕
+          <X size={16} />
         </button>
       </div>
 
@@ -160,14 +166,14 @@ function ProductForm({ shopId, productToEdit, shopCategory, onClose, onSaved }) 
         {/* Price and Category (Two columns) */}
         <div className="form-row">
           <div className="form-group form-col">
-            <label htmlFor="product-price">Price ($) *</label>
+            <label htmlFor="product-price">Price (₹) *</label>
             <input
               id="product-price"
               className="form-input"
               type="number"
               step="0.01"
               min="0"
-              placeholder="29.99"
+              placeholder="799"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               required
@@ -228,7 +234,7 @@ function ProductForm({ shopId, productToEdit, shopCategory, onClose, onSaved }) 
         {/* Photo Upload with Cloudinary */}
         <div className="form-group">
           <label>
-            Product Photo {isEditing ? '(Optional to replace)' : '*'} (via Cloudinary)
+            Product Photo {isEditing ? '(Optional to replace)' : '*'}
           </label>
 
           {imagePreview ? (
@@ -245,7 +251,7 @@ function ProductForm({ shopId, productToEdit, shopCategory, onClose, onSaved }) 
                   onClick={() => fileInputRef.current?.click()}
                   disabled={loading}
                 >
-                  🔄 Replace Photo
+                  <RefreshCw size={14} /> Replace
                 </button>
                 <button
                   type="button"
@@ -253,7 +259,7 @@ function ProductForm({ shopId, productToEdit, shopCategory, onClose, onSaved }) 
                   onClick={handleRemoveImage}
                   disabled={loading}
                 >
-                  🗑️ Remove
+                  <Trash2 size={14} /> Remove
                 </button>
               </div>
             </div>
@@ -262,8 +268,8 @@ function ProductForm({ shopId, productToEdit, shopCategory, onClose, onSaved }) 
               className="file-dropzone"
               onClick={() => fileInputRef.current?.click()}
             >
-              <span className="dropzone-icon">📷</span>
-              <span className="dropzone-text">Click to choose a photo</span>
+              <UploadCloud size={28} className="dropzone-icon" />
+              <span className="dropzone-text">Click to choose a product photo</span>
               <span className="dropzone-subtext">PNG, JPG, WEBP up to 10MB</span>
             </div>
           )}
@@ -280,10 +286,10 @@ function ProductForm({ shopId, productToEdit, shopCategory, onClose, onSaved }) 
         </div>
 
         {/* Actions */}
-        <div className="modal-actions">
+        <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
           <button
             type="button"
-            className="dash-btn-secondary"
+            className="btn btn-secondary"
             onClick={onClose}
             disabled={loading}
           >
@@ -291,14 +297,14 @@ function ProductForm({ shopId, productToEdit, shopCategory, onClose, onSaved }) 
           </button>
           <button
             type="submit"
-            className="auth-btn auth-btn-primary modal-submit-btn"
+            className="btn btn-primary"
             disabled={loading}
             id="save-product-btn"
           >
             {loading ? (
               <span className="btn-loading-content">
                 <span className="btn-spinner"></span>
-                {imageFile ? 'Uploading to Cloudinary…' : 'Saving…'}
+                {imageFile ? 'Uploading…' : 'Saving…'}
               </span>
             ) : isEditing ? (
               'Save Changes'

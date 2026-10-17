@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
+import { MapPin } from 'lucide-react';
 import './ShopMap.css';
 
 // Fix Leaflet's default marker icon paths (broken by bundlers)
@@ -14,13 +15,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Custom amber shop marker
+// Custom brand store marker (Deep teal)
 const shopIcon = L.divIcon({
   className: 'shop-map-marker',
   html: `<svg width="32" height="42" viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M16 0C7.16 0 0 7.16 0 16C0 28 16 42 16 42S32 28 32 16C32 7.16 24.84 0 16 0Z" fill="#f59e0b"/>
-    <circle cx="16" cy="16" r="8" fill="#1a1726"/>
-    <circle cx="16" cy="16" r="4" fill="#fbbf24"/>
+    <path d="M16 0C7.16 0 0 7.16 0 16C0 28 16 42 16 42S32 28 32 16C32 7.16 24.84 0 16 0Z" fill="#0f766e"/>
+    <circle cx="16" cy="16" r="8" fill="#ffffff"/>
+    <circle cx="16" cy="16" r="4" fill="#0f766e"/>
   </svg>`,
   iconSize: [32, 42],
   iconAnchor: [16, 42],
@@ -31,10 +32,10 @@ const shopIcon = L.divIcon({
 const userIcon = L.divIcon({
   className: 'shop-map-marker-user',
   html: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="14" cy="14" r="14" fill="rgba(59,130,246,0.2)"/>
-    <circle cx="14" cy="14" r="8" fill="rgba(59,130,246,0.5)"/>
-    <circle cx="14" cy="14" r="5" fill="#3b82f6"/>
-    <circle cx="14" cy="14" r="2.5" fill="white"/>
+    <circle cx="14" cy="14" r="14" fill="rgba(37,99,235,0.2)"/>
+    <circle cx="14" cy="14" r="8" fill="rgba(37,99,235,0.4)"/>
+    <circle cx="14" cy="14" r="5" fill="#2563eb"/>
+    <circle cx="14" cy="14" r="2" fill="white"/>
   </svg>`,
   iconSize: [28, 28],
   iconAnchor: [14, 14],
@@ -77,10 +78,6 @@ function getDistanceKm(lat1, lon1, lat2, lon2) {
 
 /**
  * ShopMap — renders an interactive Leaflet map with shop + user markers.
- *
- * Props:
- *   shops        — Array of shop objects (need latitude, longitude, shopName, category, distance)
- *   userLocation — { latitude, longitude } or null
  */
 function ShopMap({ shops = [], userLocation = null }) {
   const mapContainerRef = useRef(null);
@@ -113,7 +110,7 @@ function ShopMap({ shops = [], userLocation = null }) {
 
     mapInstanceRef.current = map;
 
-    // OpenStreetMap tiles
+    // OpenStreetMap standard light tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -127,7 +124,7 @@ function ShopMap({ shops = [], userLocation = null }) {
       const distStr =
         shop.distance !== null && shop.distance !== undefined
           ? `<div class="map-popup-distance">
-               📍 <span class="map-popup-distance-value">${shop.distance.toFixed(1)} km</span> away
+               <span class="map-popup-distance-value">${shop.distance.toFixed(1)} km</span> away
              </div>`
           : '';
 
@@ -157,13 +154,12 @@ function ShopMap({ shops = [], userLocation = null }) {
       ).addTo(map);
 
       userMarker.bindPopup(
-        '<div class="map-popup-user">📍 You are here</div>',
+        '<div class="map-popup-user">You are here</div>',
         { closeButton: false }
       );
     }
 
-    // Determine auto-fit bounds:
-    // Only include user location in auto-fit if it's within 50 km of the shop cluster
+    // Determine auto-fit bounds
     const boundsPoints = [...shopBoundsPoints];
     if (isUserValid) {
       const userDistFromShops = getDistanceKm(
@@ -173,13 +169,11 @@ function ShopMap({ shops = [], userLocation = null }) {
         centerLng
       );
 
-      // If user is nearby (<= 50 km), fit map to include both user and shops
       if (userDistFromShops <= 50) {
         boundsPoints.push([userLocation.latitude, userLocation.longitude]);
       }
     }
 
-    // Fit bounds or set view cleanly
     if (boundsPoints.length > 1) {
       map.fitBounds(boundsPoints, { padding: [50, 50], maxZoom: 15 });
     } else if (boundsPoints.length === 1) {
@@ -188,7 +182,6 @@ function ShopMap({ shops = [], userLocation = null }) {
       map.setView([centerLat, centerLng], 13);
     }
 
-    // Cleanup on unmount
     return () => {
       map.remove();
       mapInstanceRef.current = null;
@@ -197,10 +190,10 @@ function ShopMap({ shops = [], userLocation = null }) {
 
   return (
     <div className="shop-map-section" id="shop-map-section">
-      <h3 className="shop-map-heading">
-        <span className="shop-map-heading-icon">🗺️</span>
-        Shops Near You
-      </h3>
+      <div className="shop-map-header">
+        <MapPin size={20} color="var(--color-primary)" />
+        <h3 className="shop-map-heading">Interactive Neighborhood Store Map</h3>
+      </div>
       <div className="shop-map-container">
         <div
           ref={mapContainerRef}

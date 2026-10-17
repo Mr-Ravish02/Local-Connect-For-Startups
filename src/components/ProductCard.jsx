@@ -1,9 +1,11 @@
+import { Pencil, Trash2 } from 'lucide-react';
+
 function ProductCard({ product, onEdit, onDelete }) {
   const isInStock = product.stockStatus === 'in_stock' || product.inStock === true;
 
   const formattedPrice = typeof product.price === 'number' 
-    ? `$${product.price.toFixed(2)}`
-    : `$${product.price}`;
+    ? `₹${product.price.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+    : `₹${product.price}`;
 
   return (
     <div className="product-card" id={`product-card-${product.id}`}>
@@ -27,7 +29,7 @@ function ProductCard({ product, onEdit, onDelete }) {
       </div>
 
       <div className="product-card-body">
-        <div className="product-card-category">{product.category}</div>
+        <div className="product-card-category">{product.category || 'General'}</div>
         <h3 className="product-card-name" title={product.name}>
           {product.name}
         </h3>
@@ -41,7 +43,8 @@ function ProductCard({ product, onEdit, onDelete }) {
           id={`edit-product-btn-${product.id}`}
           title="Edit product"
         >
-          ✏️ Edit
+          <Pencil size={14} />
+          <span>Edit</span>
         </button>
         <button
           className="card-action-btn delete-btn"
@@ -49,7 +52,8 @@ function ProductCard({ product, onEdit, onDelete }) {
           id={`delete-product-btn-${product.id}`}
           title="Delete product"
         >
-          🗑️ Delete
+          <Trash2 size={14} />
+          <span>Delete</span>
         </button>
       </div>
     </div>

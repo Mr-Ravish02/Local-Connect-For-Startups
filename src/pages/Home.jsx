@@ -1,6 +1,20 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
+import {
+  MapPin,
+  Store,
+  Shirt,
+  Bike,
+  ShoppingBag,
+  ArrowRight,
+  ShieldCheck,
+  Package,
+  Layers,
+  AlertCircle,
+  RefreshCw,
+  Search,
+} from 'lucide-react';
 import { db } from '../firebase/config';
 import { getUserLocation, sortShopsByDistance } from '../utils/geolocation';
 import Navbar from '../components/Navbar';
@@ -9,14 +23,25 @@ import './Home.css';
 
 const CATEGORIES = ['All', 'Clothing', 'Cycle'];
 
+function getShopBanner(shop) {
+  if (shop.bannerUrl) return shop.bannerUrl;
+  if (shop.imageUrl) return shop.imageUrl;
+  if (shop.photoUrl) return shop.photoUrl;
+  if (shop.category === 'Clothing') {
+    return 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=700&auto=format&fit=crop&q=80';
+  }
+  if (shop.category === 'Cycle') {
+    return 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=700&auto=format&fit=crop&q=80';
+  }
+  return 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=700&auto=format&fit=crop&q=80';
+}
+
 function Home() {
   const [shops, setShops] = useState([]);
   const [productCounts, setProductCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
-  const [visibleCards, setVisibleCards] = useState(new Set());
   const shopsRef = useRef(null);
-  const cardRefs = useRef({});
   const navigate = useNavigate();
 
   // ── Geolocation state ──
@@ -72,27 +97,6 @@ function Home() {
     fetchShopsAndProducts();
   }, []);
 
-  // Intersection Observer for staggered card entrance
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setVisibleCards((prev) => new Set([...prev, entry.target.id]));
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
-    );
-
-    Object.values(cardRefs.current).forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [shops, activeCategory, userLocation]);
-
   // Sort shops by distance when location is available
   const shopsWithDistance = useMemo(() => {
     if (userLocation) {
@@ -134,17 +138,19 @@ function Home() {
     <>
       <Navbar />
       <main className="home" id="home-page">
-        {/* ── Hero Section ── */}
+        {/* ── Hero Section: Clean & Professional ── */}
         <section className="hero">
           <div className="hero-content">
-            <span className="hero-badge">🐝 Hyperlocal Shopping</span>
+            <div className="hero-badge">
+              <ShieldCheck size={15} />
+              <span>Verified Local Business Directory</span>
+            </div>
             <h1 className="hero-title">
-              Discover Local Shops
-              <span className="hero-title-accent"> Near You</span>
+              Discover & Support Local Shops Near You
             </h1>
             <p className="hero-subtitle">
-              LocalHive connects you with nearby clothing boutiques and cycle
-              shops. Support your community — shop local, shop smart.
+              LocalHive connects you directly with neighborhood boutiques and cycle stores.
+              Check live inventory, compare prices, and connect directly with local store owners.
             </p>
 
             {/* Quick Stats */}
@@ -156,7 +162,7 @@ function Home() {
               <div className="hero-stat-divider" />
               <div className="hero-stat">
                 <span className="hero-stat-value">{totalProducts}</span>
-                <span className="hero-stat-label">Products</span>
+                <span className="hero-stat-label">Products Listed</span>
               </div>
               <div className="hero-stat-divider" />
               <div className="hero-stat">
@@ -173,66 +179,97 @@ function Home() {
                 id="explore-shops-btn"
                 onClick={scrollToShops}
               >
-                Explore Shops
+                <Store size={18} />
+                Explore Nearby Shops
               </button>
               <button
                 className="btn btn-secondary"
                 id="list-shop-btn"
                 onClick={() => navigate('/signup')}
               >
-                List Your Shop
+                Register Your Shop
               </button>
             </div>
           </div>
-          <div className="hero-visual">
-            <div className="hero-glow"></div>
-            <div className="hero-card hero-card-1">
-              <span className="card-icon">👗</span>
-              <span className="card-label">Clothing</span>
+
+          {/* Clean Directory Highlights Panel (No neon glow or floating animation) */}
+          <div className="hero-features-panel">
+            <div className="feature-item">
+              <div className="feature-icon-box">
+                <MapPin size={20} />
+              </div>
+              <div className="feature-item-text">
+                <h3>Hyperlocal Proximity</h3>
+                <p>Find clothing and cycles within walking or quick cycling distance.</p>
+              </div>
             </div>
-            <div className="hero-card hero-card-2">
-              <span className="card-icon">🚲</span>
-              <span className="card-label">Cycles</span>
+            <div className="feature-item">
+              <div className="feature-icon-box">
+                <ShoppingBag size={20} />
+              </div>
+              <div className="feature-item-text">
+                <h3>Real-Time Inventory</h3>
+                <p>View genuine store catalogs with live in-stock verification.</p>
+              </div>
             </div>
-            <div className="hero-card hero-card-3">
-              <span className="card-icon">📍</span>
-              <span className="card-label">Near You</span>
+            <div className="feature-item">
+              <div className="feature-icon-box">
+                <ShieldCheck size={20} />
+              </div>
+              <div className="feature-item-text">
+                <h3>Direct Merchant Chat</h3>
+                <p>Connect instantly with shopkeepers via WhatsApp and messaging.</p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ── Location Status Bar ── */}
-        <section className="location-bar" id="location-bar">
-          {locationStatus === 'loading' && (
-            <div className="location-bar-inner location-bar-loading">
-              <div className="location-bar-spinner" />
-              <span>Detecting your location…</span>
-            </div>
-          )}
-          {locationStatus === 'granted' && userLocation && (
-            <div className="location-bar-inner location-bar-granted">
-              <span className="location-bar-icon">📍</span>
-              <span>
-                Showing shops nearest to you
-                <span className="location-bar-coords">
-                  ({userLocation.latitude.toFixed(4)}°, {userLocation.longitude.toFixed(4)}°)
-                </span>
-              </span>
-            </div>
-          )}
-          {locationStatus === 'denied' && (
-            <div className="location-bar-inner location-bar-denied">
-              <span className="location-bar-icon">⚠️</span>
-              <span>{locationError || 'Location access denied.'}</span>
-              <button
-                className="location-bar-retry"
-                onClick={requestLocation}
-                id="location-retry-btn"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
+        {/* ── Location Status Bar: Clean Light Alert ── */}
+        <section className="location-bar-wrapper">
+          <div className="location-bar" id="location-bar">
+            {locationStatus === 'loading' && (
+              <div className="location-bar-inner location-bar-loading">
+                <div className="location-bar-spinner" />
+                <span>Locating nearby stores around you…</span>
+              </div>
+            )}
+            {locationStatus === 'granted' && userLocation && (
+              <div className="location-bar-inner location-bar-granted">
+                <div className="location-bar-left">
+                  <MapPin size={16} className="location-bar-icon" />
+                  <span>
+                    Showing shops sorted by distance to your current location
+                    <span className="location-bar-coords">
+                      ({userLocation.latitude.toFixed(3)}°, {userLocation.longitude.toFixed(3)}°)
+                    </span>
+                  </span>
+                </div>
+                <button
+                  className="location-bar-refresh"
+                  onClick={requestLocation}
+                  title="Refresh location"
+                >
+                  <RefreshCw size={13} />
+                  Refresh
+                </button>
+              </div>
+            )}
+            {locationStatus === 'denied' && (
+              <div className="location-bar-inner location-bar-denied">
+                <div className="location-bar-left">
+                  <AlertCircle size={16} className="location-bar-icon" />
+                  <span>{locationError || 'Location access denied. Enable GPS to sort shops by distance.'}</span>
+                </div>
+                <button
+                  className="location-bar-retry"
+                  onClick={requestLocation}
+                  id="location-retry-btn"
+                >
+                  Try Again
+                </button>
+              </div>
+            )}
+          </div>
         </section>
 
         {/* ── Map Section ── */}
@@ -247,97 +284,115 @@ function Home() {
           <div className="shops-section-header">
             <div>
               <h2 className="shops-section-title">
-                Browse Local Shops
+                Browse Neighborhood Shops
               </h2>
               <p className="shops-section-subtitle">
-                Explore stores in your neighborhood — filter by category to find
-                exactly what you need.
+                Verified retail stores and workshops in your local community.
               </p>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="category-filters" id="category-filters">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  className={`category-pill ${activeCategory === cat ? 'active' : ''}`}
+                  onClick={() => setActiveCategory(cat)}
+                  id={`filter-${cat.toLowerCase()}`}
+                >
+                  {cat === 'Clothing' && <Shirt size={15} />}
+                  {cat === 'Cycle' && <Bike size={15} />}
+                  {cat === 'All' && <Store size={15} />}
+                  <span>{cat}</span>
+                  <span className="pill-count">
+                    {cat === 'All'
+                      ? shops.length
+                      : shops.filter((s) => s.category === cat).length}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Category Filter Pills */}
-          <div className="category-filters" id="category-filters">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                className={`category-pill ${activeCategory === cat ? 'active' : ''}`}
-                onClick={() => setActiveCategory(cat)}
-                id={`filter-${cat.toLowerCase()}`}
-              >
-                {cat === 'Clothing' && '👗 '}
-                {cat === 'Cycle' && '🚲 '}
-                {cat === 'All' && '🏪 '}
-                {cat}
-                <span className="pill-count">
-                  {cat === 'All'
-                    ? shops.length
-                    : shops.filter((s) => s.category === cat).length}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Shop Cards Grid */}
+          {/* Shop Cards Grid: Clean Real Store Cards */}
           {loading ? (
             <div className="shops-loading">
               <div className="loading-spinner"></div>
-              <p>Finding local shops…</p>
+              <p>Loading neighborhood shops…</p>
             </div>
           ) : filteredShops.length === 0 ? (
             <div className="shops-empty">
-              <div className="shops-empty-icon">🏪</div>
+              <div className="shops-empty-icon-box">
+                <Store size={36} />
+              </div>
               <h3>No shops found</h3>
               <p>
                 {activeCategory === 'All'
-                  ? 'No shops have been listed yet. Be the first!'
-                  : `No ${activeCategory} shops listed yet.`}
+                  ? 'No local shops have been registered yet.'
+                  : `No ${activeCategory} shops listed in this area yet.`}
               </p>
             </div>
           ) : (
             <div className="shops-grid" id="shops-grid">
-              {filteredShops.map((shop, index) => (
-                <Link
-                  to={`/shop/${shop.id}`}
+              {filteredShops.map((shop) => (
+                <div
                   key={shop.id}
-                  className={`shop-card ${visibleCards.has(`shop-card-${shop.id}`) ? 'shop-card-visible' : ''}`}
+                  className="shop-card"
                   id={`shop-card-${shop.id}`}
-                  ref={(el) => { cardRefs.current[shop.id] = el; }}
-                  style={{ '--card-index': index }}
                 >
-                  <div className="shop-card-header">
-                    <span className="shop-card-icon">
-                      {shop.category === 'Clothing' ? '👗' : '🚲'}
-                    </span>
-                    <span className="shop-card-category-tag">
-                      {shop.category}
-                    </span>
-                  </div>
-                  <div className="shop-card-body">
-                    <h3 className="shop-card-name">{shop.shopName}</h3>
-                    <p className="shop-card-address">
-                      <span className="address-icon">📍</span>
-                      {shop.address}
-                    </p>
-                    <p className="shop-card-desc">{shop.description}</p>
-                  </div>
-                  <div className="shop-card-footer">
-                    <div className="shop-card-footer-left">
-                      <span className="shop-card-product-count">
-                        📦 {productCounts[shop.id] || 0} products
+                  {/* Shop Banner / Photo */}
+                  <div className="shop-card-media">
+                    <img
+                      src={getShopBanner(shop)}
+                      alt={shop.shopName}
+                      className="shop-card-banner-img"
+                      loading="lazy"
+                    />
+                    <div className="shop-card-badge-container">
+                      <span className="shop-card-category-badge">
+                        {shop.category === 'Clothing' && <Shirt size={13} />}
+                        {shop.category === 'Cycle' && <Bike size={13} />}
+                        {shop.category !== 'Clothing' && shop.category !== 'Cycle' && <Store size={13} />}
+                        {shop.category}
                       </span>
                       {shop.distance !== null && shop.distance !== undefined && (
-                        <span className="shop-card-distance">
-                          📍 {formatDistance(shop.distance)} away
+                        <span className="shop-card-distance-badge">
+                          <MapPin size={12} />
+                          {formatDistance(shop.distance)}
                         </span>
                       )}
                     </div>
-                    <span className="shop-card-cta">
-                      View Products
-                      <span className="cta-arrow">→</span>
-                    </span>
                   </div>
-                </Link>
+
+                  {/* Shop Info */}
+                  <div className="shop-card-content">
+                    <h3 className="shop-card-name" title={shop.shopName}>
+                      {shop.shopName}
+                    </h3>
+                    <p className="shop-card-address">
+                      <MapPin size={14} className="address-icon" />
+                      <span>{shop.address || 'Local neighborhood'}</span>
+                    </p>
+                    <p className="shop-card-desc">
+                      {shop.description || 'Visit store to explore collection and speak with the owner.'}
+                    </p>
+
+                    <div className="shop-card-footer">
+                      <span className="shop-card-product-count">
+                        <Package size={14} />
+                        {productCounts[shop.id] || 0} products listed
+                      </span>
+                      <Link
+                        to={`/shop/${shop.id}`}
+                        className="shop-card-btn"
+                        id={`view-shop-btn-${shop.id}`}
+                      >
+                        <span>View Shop</span>
+                        <ArrowRight size={15} />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           )}

@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import CreateShopProfile from './pages/CreateShopProfile';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import ChatWidget from './components/ChatWidget';
 import './App.css';
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
             }
           />
         </Routes>
+        <ChatWidget />
       </AuthProvider>
     </BrowserRouter>
   );

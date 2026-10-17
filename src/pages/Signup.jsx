@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Store, ShoppingBag, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
 
@@ -49,19 +50,27 @@ function Signup() {
     <div className="auth-page" id="signup-page">
       <div className="auth-card">
         <div className="auth-header">
-          <div className="auth-logo">
-            🐝 <span className="auth-logo-accent">LocalHive</span>
-          </div>
+          <Link to="/" className="auth-logo">
+            <div className="auth-logo-box">
+              <Store size={22} color="#ffffff" strokeWidth={2.4} />
+            </div>
+            <span className="auth-logo-text">LocalHive</span>
+          </Link>
           <h1>Create an Account</h1>
-          <p>Join your local shopping community</p>
+          <p>Join your local neighborhood shopping directory</p>
         </div>
 
-        {error && <div className="auth-error" id="signup-error">{error}</div>}
+        {error && (
+          <div className="auth-error" id="signup-error">
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           {/* Role Selector */}
-          <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.4rem', display: 'block' }}>
-            I am a…
+          <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.5rem', display: 'block' }}>
+            I am joining as a…
           </label>
           <div className="role-selector" id="role-selector">
             <div
@@ -69,21 +78,25 @@ function Signup() {
               onClick={() => setRole('customer')}
               id="role-customer"
             >
-              <span className="role-icon">🛍️</span>
-              <span className="role-label">Customer</span>
+              <div className="role-icon-box">
+                <ShoppingBag size={20} />
+              </div>
+              <span className="role-label">Shopper</span>
             </div>
             <div
               className={`role-option ${role === 'shopOwner' ? 'active' : ''}`}
               onClick={() => setRole('shopOwner')}
               id="role-shop-owner"
             >
-              <span className="role-icon">🏪</span>
+              <div className="role-icon-box">
+                <Store size={20} />
+              </div>
               <span className="role-label">Shop Owner</span>
             </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="signup-email">Email</label>
+            <label htmlFor="signup-email">Email Address</label>
             <input
               id="signup-email"
               className="form-input"
@@ -114,7 +127,7 @@ function Signup() {
               id="signup-confirm"
               className="form-input"
               type="password"
-              placeholder="Re-enter password"
+              placeholder="Re-enter your password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required

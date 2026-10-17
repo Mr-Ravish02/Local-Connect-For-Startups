@@ -9,6 +9,22 @@ import {
   query,
   where,
 } from 'firebase/firestore';
+import {
+  Shield,
+  Store,
+  Package,
+  Users,
+  Star,
+  Search,
+  X,
+  Trash2,
+  ExternalLink,
+  CheckCircle,
+  AlertTriangle,
+  AlertCircle,
+  ShieldCheck,
+  User,
+} from 'lucide-react';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { ADMIN_EMAIL } from '../utils/constants';
@@ -332,7 +348,8 @@ function AdminDashboard() {
         <div className="admin-header-card">
           <div className="admin-header-left">
             <div className="admin-badge">
-              <span className="admin-badge-icon">🛡️</span> LocalHive Admin Portal
+              <Shield size={14} />
+              <span>Platform Administration</span>
             </div>
             <h1 className="admin-title">System Administration & Moderation</h1>
             <p className="admin-subtitle">
@@ -354,32 +371,46 @@ function AdminDashboard() {
             }`}
             id="admin-action-notice"
           >
-            <span>{actionNotice.type === 'success' ? '✅' : '⚠️'}</span>
+            {actionNotice.type === 'success' ? (
+              <CheckCircle size={18} style={{ flexShrink: 0 }} />
+            ) : (
+              <AlertCircle size={18} style={{ flexShrink: 0 }} />
+            )}
             <span>{actionNotice.message}</span>
             <button
               className="notice-close-btn"
               onClick={() => setActionNotice(null)}
               aria-label="Dismiss notice"
             >
-              ✕
+              <X size={15} />
             </button>
           </div>
         )}
 
         {/* KPI Metrics Summary Bar */}
         <section className="admin-kpis" id="admin-kpis">
-          <div className="admin-kpi-card" onClick={() => setActiveTab('shops')}>
-            <div className="kpi-icon-wrap kpi-shops">🏪</div>
+          <div
+            className={`admin-kpi-card ${activeTab === 'shops' ? 'active-kpi' : ''}`}
+            onClick={() => setActiveTab('shops')}
+          >
+            <div className="kpi-icon-wrap kpi-shops">
+              <Store size={22} />
+            </div>
             <div className="kpi-info">
               <span className="kpi-value" id="kpi-total-shops">
                 {shops.length}
               </span>
-              <span className="kpi-label">Total Shops</span>
+              <span className="kpi-label">Registered Shops</span>
             </div>
           </div>
 
-          <div className="admin-kpi-card" onClick={() => setActiveTab('products')}>
-            <div className="kpi-icon-wrap kpi-products">📦</div>
+          <div
+            className={`admin-kpi-card ${activeTab === 'products' ? 'active-kpi' : ''}`}
+            onClick={() => setActiveTab('products')}
+          >
+            <div className="kpi-icon-wrap kpi-products">
+              <Package size={22} />
+            </div>
             <div className="kpi-info">
               <span className="kpi-value" id="kpi-total-products">
                 {products.length}
@@ -388,18 +419,28 @@ function AdminDashboard() {
             </div>
           </div>
 
-          <div className="admin-kpi-card" onClick={() => setActiveTab('users')}>
-            <div className="kpi-icon-wrap kpi-users">👥</div>
+          <div
+            className={`admin-kpi-card ${activeTab === 'users' ? 'active-kpi' : ''}`}
+            onClick={() => setActiveTab('users')}
+          >
+            <div className="kpi-icon-wrap kpi-users">
+              <Users size={22} />
+            </div>
             <div className="kpi-info">
               <span className="kpi-value" id="kpi-total-users">
                 {users.length}
               </span>
-              <span className="kpi-label">Total Users</span>
+              <span className="kpi-label">Registered Users</span>
             </div>
           </div>
 
-          <div className="admin-kpi-card" onClick={() => setActiveTab('reviews')}>
-            <div className="kpi-icon-wrap kpi-reviews">⭐</div>
+          <div
+            className={`admin-kpi-card ${activeTab === 'reviews' ? 'active-kpi' : ''}`}
+            onClick={() => setActiveTab('reviews')}
+          >
+            <div className="kpi-icon-wrap kpi-reviews">
+              <Star size={22} />
+            </div>
             <div className="kpi-info">
               <span className="kpi-value" id="kpi-total-reviews">
                 {reviews.length}
@@ -416,28 +457,36 @@ function AdminDashboard() {
             onClick={() => setActiveTab('shops')}
             id="tab-shops-btn"
           >
-            🏪 Shops <span className="tab-counter">{shops.length}</span>
+            <Store size={16} />
+            <span>Shops</span>
+            <span className="tab-counter">{shops.length}</span>
           </button>
           <button
             className={`admin-tab-btn ${activeTab === 'products' ? 'active' : ''}`}
             onClick={() => setActiveTab('products')}
             id="tab-products-btn"
           >
-            📦 Products <span className="tab-counter">{products.length}</span>
+            <Package size={16} />
+            <span>Products</span>
+            <span className="tab-counter">{products.length}</span>
           </button>
           <button
             className={`admin-tab-btn ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
             id="tab-users-btn"
           >
-            👥 Users <span className="tab-counter">{users.length}</span>
+            <Users size={16} />
+            <span>Users</span>
+            <span className="tab-counter">{users.length}</span>
           </button>
           <button
             className={`admin-tab-btn ${activeTab === 'reviews' ? 'active' : ''}`}
             onClick={() => setActiveTab('reviews')}
             id="tab-reviews-btn"
           >
-            ⭐ Reviews <span className="tab-counter">{reviews.length}</span>
+            <Star size={16} />
+            <span>Reviews</span>
+            <span className="tab-counter">{reviews.length}</span>
           </button>
         </div>
 
@@ -446,7 +495,7 @@ function AdminDashboard() {
           <section className="admin-panel" id="admin-shops-panel">
             <div className="panel-toolbar">
               <div className="toolbar-search">
-                <span className="search-icon">🔍</span>
+                <Search size={16} className="search-icon" />
                 <input
                   type="text"
                   placeholder="Search shops by name, category, or address…"
@@ -456,7 +505,7 @@ function AdminDashboard() {
                 />
                 {shopSearch && (
                   <button className="clear-search-btn" onClick={() => setShopSearch('')}>
-                    ✕
+                    <X size={14} />
                   </button>
                 )}
               </div>
@@ -472,7 +521,7 @@ function AdminDashboard() {
               </div>
             ) : filteredShops.length === 0 ? (
               <div className="admin-empty" id="shops-empty-state">
-                <span className="empty-icon">🏪</span>
+                <Store size={36} className="empty-icon" />
                 <h3>No shops found</h3>
                 <p>
                   {shopSearch
@@ -501,7 +550,9 @@ function AdminDashboard() {
                         <tr key={shop.id} id={`shop-row-${shop.id}`}>
                           <td>
                             <div className="cell-shop-info">
-                              <span className="cell-avatar">🏪</span>
+                              <div className="cell-avatar">
+                                <Store size={16} />
+                              </div>
                               <div>
                                 <span className="cell-title">
                                   {shop.shopName || shop.name || 'Unnamed Shop'}
@@ -528,7 +579,8 @@ function AdminDashboard() {
                                 rel="noreferrer"
                                 title="View public storefront"
                               >
-                                View Shop ↗
+                                <span>View Shop</span>
+                                <ExternalLink size={12} />
                               </Link>
                               <button
                                 className="action-btn action-delete"
@@ -538,7 +590,8 @@ function AdminDashboard() {
                                 }}
                                 id={`delete-shop-btn-${shop.id}`}
                               >
-                                🗑️ Delete Shop
+                                <Trash2 size={13} />
+                                <span>Delete Shop</span>
                               </button>
                             </div>
                           </td>
@@ -557,7 +610,7 @@ function AdminDashboard() {
           <section className="admin-panel" id="admin-products-panel">
             <div className="panel-toolbar">
               <div className="toolbar-search">
-                <span className="search-icon">🔍</span>
+                <Search size={16} className="search-icon" />
                 <input
                   type="text"
                   placeholder="Search products by title, category, or shop name…"
@@ -567,7 +620,7 @@ function AdminDashboard() {
                 />
                 {productSearch && (
                   <button className="clear-search-btn" onClick={() => setProductSearch('')}>
-                    ✕
+                    <X size={14} />
                   </button>
                 )}
               </div>
@@ -583,7 +636,7 @@ function AdminDashboard() {
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="admin-empty" id="products-empty-state">
-                <span className="empty-icon">📦</span>
+                <Package size={36} className="empty-icon" />
                 <h3>No products found</h3>
                 <p>
                   {productSearch
@@ -617,7 +670,9 @@ function AdminDashboard() {
                                 className="prod-thumbnail"
                               />
                             ) : (
-                              <div className="prod-thumb-placeholder">🛍️</div>
+                              <div className="prod-thumb-placeholder">
+                                <Package size={16} />
+                              </div>
                             )}
                             <div>
                               <span className="cell-title">{prod.name || 'Unnamed Product'}</span>
@@ -639,7 +694,7 @@ function AdminDashboard() {
                           <span className="category-pill">{prod.category || 'General'}</span>
                         </td>
                         <td className="cell-price">
-                          ${typeof prod.price === 'number' ? prod.price.toFixed(2) : prod.price || '0.00'}
+                          ₹{typeof prod.price === 'number' ? prod.price.toFixed(2) : prod.price || '0.00'}
                         </td>
                         <td>
                           <span
@@ -660,7 +715,8 @@ function AdminDashboard() {
                             }}
                             id={`delete-product-btn-${prod.id}`}
                           >
-                            🗑️ Delete Product
+                            <Trash2 size={13} />
+                            <span>Delete</span>
                           </button>
                         </td>
                       </tr>
@@ -677,7 +733,7 @@ function AdminDashboard() {
           <section className="admin-panel" id="admin-users-panel">
             <div className="panel-toolbar">
               <div className="toolbar-search">
-                <span className="search-icon">🔍</span>
+                <Search size={16} className="search-icon" />
                 <input
                   type="text"
                   placeholder="Search users by email…"
@@ -687,7 +743,7 @@ function AdminDashboard() {
                 />
                 {userSearch && (
                   <button className="clear-search-btn" onClick={() => setUserSearch('')}>
-                    ✕
+                    <X size={14} />
                   </button>
                 )}
               </div>
@@ -723,7 +779,7 @@ function AdminDashboard() {
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="admin-empty" id="users-empty-state">
-                <span className="empty-icon">👥</span>
+                <Users size={36} className="empty-icon" />
                 <h3>No users found</h3>
                 <p>No user accounts matched your search or role filter.</p>
               </div>
@@ -745,9 +801,9 @@ function AdminDashboard() {
                         <tr key={user.id} id={`user-row-${user.id}`}>
                           <td>
                             <div className="cell-user-info">
-                              <span className="user-avatar">
-                                {r === 'admin' ? '🛡️' : r === 'shopOwner' ? '🏪' : '🛍️'}
-                              </span>
+                              <div className="user-avatar">
+                                <User size={15} />
+                              </div>
                               <span className="user-email-text">{user.email || 'No email registered'}</span>
                             </div>
                           </td>
@@ -762,10 +818,10 @@ function AdminDashboard() {
                               }`}
                             >
                               {r === 'admin'
-                                ? '🛡️ Admin'
+                                ? 'Admin'
                                 : r === 'shopOwner'
-                                ? '🏪 Shop Owner'
-                                : '🛍️ Customer'}
+                                ? 'Shop Owner'
+                                : 'Customer'}
                             </span>
                           </td>
                           <td className="cell-mono">{user.id}</td>
@@ -785,7 +841,7 @@ function AdminDashboard() {
           <section className="admin-panel" id="admin-reviews-panel">
             <div className="panel-toolbar">
               <div className="toolbar-search">
-                <span className="search-icon">🔍</span>
+                <Search size={16} className="search-icon" />
                 <input
                   type="text"
                   placeholder="Search reviews by comment text, user email, or shop…"
@@ -795,7 +851,7 @@ function AdminDashboard() {
                 />
                 {reviewSearch && (
                   <button className="clear-search-btn" onClick={() => setReviewSearch('')}>
-                    ✕
+                    <X size={14} />
                   </button>
                 )}
               </div>
@@ -808,11 +864,11 @@ function AdminDashboard() {
                   onChange={(e) => setReviewRatingFilter(e.target.value)}
                 >
                   <option value="all">All Stars ({reviews.length})</option>
-                  <option value="5">5 Stars ⭐⭐⭐⭐⭐</option>
-                  <option value="4">4 Stars ⭐⭐⭐⭐</option>
-                  <option value="3">3 Stars ⭐⭐⭐</option>
-                  <option value="2">2 Stars ⭐⭐</option>
-                  <option value="1">1 Star ⭐</option>
+                  <option value="5">5 Stars</option>
+                  <option value="4">4 Stars</option>
+                  <option value="3">3 Stars</option>
+                  <option value="2">2 Stars</option>
+                  <option value="1">1 Star</option>
                 </select>
               </div>
               <div className="toolbar-stats">
@@ -827,7 +883,7 @@ function AdminDashboard() {
               </div>
             ) : filteredReviews.length === 0 ? (
               <div className="admin-empty" id="reviews-empty-state">
-                <span className="empty-icon">⭐</span>
+                <Star size={36} className="empty-icon" />
                 <h3>No reviews found</h3>
                 <p>
                   {reviewSearch
@@ -881,7 +937,8 @@ function AdminDashboard() {
                             }}
                             id={`delete-review-btn-${rev.id}`}
                           >
-                            🗑️ Delete Review
+                            <Trash2 size={13} />
+                            <span>Delete</span>
                           </button>
                         </td>
                       </tr>
@@ -903,26 +960,29 @@ function AdminDashboard() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
-              <h2>🗑️ Delete Shop</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Trash2 size={20} color="var(--color-danger)" />
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>Delete Shop</h2>
+              </div>
               <button
                 className="modal-close-btn"
                 onClick={() => setDeletingShop(null)}
                 disabled={isProcessingDelete}
                 aria-label="Close modal"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
 
             {modalError && <div className="auth-error modal-error-banner">{modalError}</div>}
 
             <div className="delete-modal-body">
-              <p>
+              <p style={{ color: 'var(--color-text)', fontSize: '0.95rem' }}>
                 Are you sure you want to delete{' '}
                 <strong>&quot;{deletingShop.shopName || deletingShop.name || 'this shop'}&quot;</strong>?
               </p>
               <div className="delete-cascade-warning">
-                <span className="warning-icon">⚠️</span>
+                <AlertTriangle size={20} className="warning-icon" />
                 <div>
                   <strong>Permanent Cascade Deletion:</strong>
                   <p>
@@ -934,10 +994,10 @@ function AdminDashboard() {
               </div>
             </div>
 
-            <div className="modal-actions">
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
               <button
                 type="button"
-                className="dash-btn-secondary"
+                className="btn btn-secondary"
                 onClick={() => setDeletingShop(null)}
                 disabled={isProcessingDelete}
               >
@@ -945,12 +1005,13 @@ function AdminDashboard() {
               </button>
               <button
                 type="button"
-                className="auth-btn btn-danger modal-submit-btn"
+                className="btn"
+                style={{ background: 'var(--color-danger)', color: '#ffffff', borderColor: 'var(--color-danger)' }}
                 onClick={confirmDeleteShop}
                 disabled={isProcessingDelete}
                 id="confirm-delete-shop-btn"
               >
-                {isProcessingDelete ? 'Deleting Shop & Products…' : 'Yes, Delete Shop & Products'}
+                {isProcessingDelete ? 'Deleting Shop & Products…' : 'Delete Shop & Products'}
               </button>
             </div>
           </div>
@@ -966,21 +1027,24 @@ function AdminDashboard() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
-              <h2>🗑️ Delete Product</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Trash2 size={20} color="var(--color-danger)" />
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>Delete Product</h2>
+              </div>
               <button
                 className="modal-close-btn"
                 onClick={() => setDeletingProduct(null)}
                 disabled={isProcessingDelete}
                 aria-label="Close modal"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
 
             {modalError && <div className="auth-error modal-error-banner">{modalError}</div>}
 
             <div className="delete-modal-body">
-              <p>
+              <p style={{ color: 'var(--color-text)', fontSize: '0.95rem' }}>
                 Are you sure you want to delete product{' '}
                 <strong>&quot;{deletingProduct.name}&quot;</strong> from{' '}
                 <strong>
@@ -988,15 +1052,15 @@ function AdminDashboard() {
                 </strong>
                 ?
               </p>
-              <p className="delete-warning-text">
+              <p className="delete-warning-text" style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
                 This action cannot be undone. This product will be immediately removed from the catalog.
               </p>
             </div>
 
-            <div className="modal-actions">
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
               <button
                 type="button"
-                className="dash-btn-secondary"
+                className="btn btn-secondary"
                 onClick={() => setDeletingProduct(null)}
                 disabled={isProcessingDelete}
               >
@@ -1004,12 +1068,13 @@ function AdminDashboard() {
               </button>
               <button
                 type="button"
-                className="auth-btn btn-danger modal-submit-btn"
+                className="btn"
+                style={{ background: 'var(--color-danger)', color: '#ffffff', borderColor: 'var(--color-danger)' }}
                 onClick={confirmDeleteProduct}
                 disabled={isProcessingDelete}
                 id="confirm-delete-product-btn"
               >
-                {isProcessingDelete ? 'Deleting…' : 'Yes, Delete Product'}
+                {isProcessingDelete ? 'Deleting…' : 'Delete Product'}
               </button>
             </div>
           </div>
@@ -1025,36 +1090,39 @@ function AdminDashboard() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
-              <h2>🗑️ Moderate & Delete Review</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Trash2 size={20} color="var(--color-danger)" />
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>Moderate & Delete Review</h2>
+              </div>
               <button
                 className="modal-close-btn"
                 onClick={() => setDeletingReview(null)}
                 disabled={isProcessingDelete}
                 aria-label="Close modal"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
 
             {modalError && <div className="auth-error modal-error-banner">{modalError}</div>}
 
             <div className="delete-modal-body">
-              <p>
+              <p style={{ color: 'var(--color-text)', fontSize: '0.95rem' }}>
                 Are you sure you want to delete this {deletingReview.rating}★ review by{' '}
                 <strong>{deletingReview.customerEmail || 'a customer'}</strong>?
               </p>
-              <blockquote className="modal-review-preview">
+              <blockquote className="modal-review-preview" style={{ fontStyle: 'italic', margin: '0.75rem 0', padding: '0.75rem 1rem', background: 'var(--color-surface-subtle)', borderRadius: '6px', borderLeft: '3px solid var(--color-primary)' }}>
                 &quot;{deletingReview.comment}&quot;
               </blockquote>
-              <p className="delete-warning-text">
+              <p className="delete-warning-text" style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
                 This review will be permanently deleted from the shop page.
               </p>
             </div>
 
-            <div className="modal-actions">
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
               <button
                 type="button"
-                className="dash-btn-secondary"
+                className="btn btn-secondary"
                 onClick={() => setDeletingReview(null)}
                 disabled={isProcessingDelete}
               >
@@ -1062,12 +1130,13 @@ function AdminDashboard() {
               </button>
               <button
                 type="button"
-                className="auth-btn btn-danger modal-submit-btn"
+                className="btn"
+                style={{ background: 'var(--color-danger)', color: '#ffffff', borderColor: 'var(--color-danger)' }}
                 onClick={confirmDeleteReview}
                 disabled={isProcessingDelete}
                 id="confirm-delete-review-btn"
               >
-                {isProcessingDelete ? 'Deleting…' : 'Yes, Delete Review'}
+                {isProcessingDelete ? 'Deleting…' : 'Delete Review'}
               </button>
             </div>
           </div>
