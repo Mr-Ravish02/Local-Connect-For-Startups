@@ -28,7 +28,7 @@ const SAMPLE_PRODUCTS = [
     stockStatus: 'in_stock',
     inStock: true,
     shopId: 'sample-shop-1', // Punjab Style Boutique (Clock Tower)
-    imageUrl: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=600&auto=format&fit=crop&q=80',
+    imageUrl: '/products/denim-jacket.jpg',
     createdAt: new Date().toISOString(),
   },
   {
@@ -39,7 +39,7 @@ const SAMPLE_PRODUCTS = [
     stockStatus: 'in_stock',
     inStock: true,
     shopId: 'sample-shop-3', // Royal Fashion House (Model Town)
-    imageUrl: 'https://images.unsplash.com/photo-1548883354-7622d03aca27?w=600&auto=format&fit=crop&q=80',
+    imageUrl: '/products/denim-jacket.jpg',
     createdAt: new Date().toISOString(),
   },
   {
@@ -50,7 +50,7 @@ const SAMPLE_PRODUCTS = [
     stockStatus: 'out_of_stock',
     inStock: false,
     shopId: 'sample-shop-5', // Desi Threads (Ghumar Mandi)
-    imageUrl: 'https://images.unsplash.com/photo-1521223890158-f9f7c3d5d504?w=600&auto=format&fit=crop&q=80',
+    imageUrl: '/products/denim-jacket.jpg',
     createdAt: new Date().toISOString(),
   },
 
@@ -87,7 +87,7 @@ const SAMPLE_PRODUCTS = [
     stockStatus: 'in_stock',
     inStock: true,
     shopId: 'sample-shop-2', // Ludhiana Cycle Hub (Gill Road)
-    imageUrl: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&auto=format&fit=crop&q=80',
+    imageUrl: '/products/cycle.jpg',
     createdAt: new Date().toISOString(),
   },
   {
@@ -98,7 +98,7 @@ const SAMPLE_PRODUCTS = [
     stockStatus: 'in_stock',
     inStock: true,
     shopId: 'sample-shop-4', // SpeedWheels Cycling (Ferozepur Road)
-    imageUrl: 'https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=600&auto=format&fit=crop&q=80',
+    imageUrl: '/products/cycle.jpg',
     createdAt: new Date().toISOString(),
   },
 
@@ -111,7 +111,7 @@ const SAMPLE_PRODUCTS = [
     stockStatus: 'in_stock',
     inStock: true,
     shopId: 'sample-shop-2', // Ludhiana Cycle Hub
-    imageUrl: 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=600&auto=format&fit=crop&q=80',
+    imageUrl: '/products/cycle.jpg',
     createdAt: new Date().toISOString(),
   },
   {
@@ -122,7 +122,7 @@ const SAMPLE_PRODUCTS = [
     stockStatus: 'out_of_stock',
     inStock: false,
     shopId: 'sample-shop-4', // SpeedWheels Cycling
-    imageUrl: 'https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=600&auto=format&fit=crop&q=80',
+    imageUrl: '/products/cycle.jpg',
     createdAt: new Date().toISOString(),
   },
 ];
