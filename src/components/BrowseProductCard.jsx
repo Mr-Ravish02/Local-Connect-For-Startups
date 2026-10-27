@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Store, MapPin, Package, ArrowRight, ImageOff } from 'lucide-react';
+import { recordProductView } from '../utils/analytics';
 
 function BrowseProductCard({ product, shopName, shopId, distance }) {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -88,6 +89,7 @@ function BrowseProductCard({ product, shopName, shopId, distance }) {
             to={`/shop/${shopId}`}
             className="browse-card-view-btn"
             title="View product at store"
+            onClick={() => recordProductView(product.id, shopId)}
           >
             <span>View</span>
             <ArrowRight size={13} />

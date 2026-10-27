@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { doc, collection, query, where, onSnapshot } from 'firebase/firestore';
 import {
   Store,
   Shirt,
@@ -16,12 +16,19 @@ import {
   CheckCircle,
   Clock,
   User,
+  Eye,
+  Star,
+  Flame,
+  TrendingUp,
+  MessageSquare,
 } from 'lucide-react';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import ProductFormModal from '../components/ProductFormModal';
 import ProductCard from '../components/ProductCard';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
+import ShopQRCode from '../components/ShopQRCode';
+import { fetchWeeklyShopViews } from '../utils/analytics';
 import './Dashboard.css';
 
 function Dashboard() {
@@ -39,25 +46,43 @@ function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [stockFilter, setStockFilter] = useState('all'); // 'all' | 'in_stock' | 'out_of_stock'
 
+  // Analytics & Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [weeklyViews, setWeeklyViews] = useState(0);
+
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch shop details
+  // Real-time listener for shop profile & live view counters
   useEffect(() => {
-    async function fetchShop() {
-      if (!currentUser) return;
-      try {
-        const shopDoc = await getDoc(doc(db, 'shops', currentUser.uid));
-        if (shopDoc.exists()) {
-          setShop(shopDoc.data());
+    if (!currentUser) return;
+
+    const unsubShop = onSnapshot(
+      doc(db, 'shops', currentUser.uid),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const shopData = docSnap.data();
+          setShop({ id: docSnap.id, ...shopData });
+          if (shopData.weeklyViews !== undefined) {
+            setWeeklyViews(shopData.weeklyViews);
+          }
         }
-      } catch (err) {
-        console.error('Error fetching shop:', err);
-      } finally {
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error listening to shop:', err);
         setLoading(false);
       }
-    }
-    fetchShop();
+    );
+
+    // Also fetch weekly views aggregation from shopViews collection
+    fetchWeeklyShopViews(currentUser.uid).then((count) => {
+      if (count > 0) {
+        setWeeklyViews((prev) => Math.max(prev, count));
+      }
+    });
+
+    return () => unsubShop();
   }, [currentUser]);
 
   const [inquiries, setInquiries] = useState([]);
@@ -135,6 +160,52 @@ function Dashboard() {
 
     return () => unsubscribe();
   }, [currentUser]);
+
+  // Real-time listener for customer reviews
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const q = query(
+      collection(db, 'reviews'),
+      where('shopId', '==', currentUser.uid)
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const items = [];
+        snapshot.forEach((docSnap) => {
+          items.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        setReviews(items);
+      },
+      (err) => {
+        console.error('Error listening to reviews:', err);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [currentUser]);
+
+  // Rating and review calculations
+  const ratingStats = useMemo(() => {
+    if (reviews.length === 0) return { avg: 0, count: 0 };
+    const sum = reviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+    return {
+      avg: (sum / reviews.length).toFixed(1),
+      count: reviews.length,
+    };
+  }, [reviews]);
+
+  // Most viewed product calculation
+  const mostViewedProduct = useMemo(() => {
+    if (products.length === 0) return null;
+    return products.reduce((top, p) => {
+      const topViews = top?.views || top?.viewCount || 0;
+      const pViews = p?.views || p?.viewCount || 0;
+      return pViews > topViews ? p : top;
+    }, products[0]);
+  }, [products]);
 
   async function handleLogout() {
     await logout();
@@ -234,37 +305,153 @@ function Dashboard() {
           </p>
         </div>
 
-        {/* Shop Info Card */}
-        {shop ? (
-          <div className="dash-shop-card" id="shop-info-card">
-            <div className="dash-shop-header">
-              <div className="dash-shop-icon-box">
-                {shop.category === 'Clothing' ? <Shirt size={28} /> : <Bike size={28} />}
+        {/* Shop Analytics Section - Stat Cards at Top of Dashboard */}
+        {shop && (
+          <section className="dash-analytics-section" id="shop-analytics-section">
+            <div className="dash-analytics-header">
+              <h2 className="dash-analytics-title">
+                <TrendingUp size={20} color="var(--color-primary)" />
+                Store Performance & Analytics
+              </h2>
+            </div>
+
+            <div className="dash-analytics-grid" id="analytics-stat-cards">
+              {/* Stat 1: Total profile views this week */}
+              <div className="analytics-stat-card" id="stat-card-views">
+                <div className="analytics-stat-top">
+                  <div className="analytics-stat-icon analytics-icon-views">
+                    <Eye size={22} />
+                  </div>
+                  <span className="analytics-stat-pill pill-teal">This Week</span>
+                </div>
+                <div className="analytics-stat-body">
+                  <div className="analytics-stat-value" id="stat-value-views">
+                    {(weeklyViews || shop?.weeklyViews || shop?.viewCount || 0).toLocaleString()}
+                  </div>
+                  <div className="analytics-stat-label">Profile Views</div>
+                </div>
+                <div className="analytics-stat-footer">
+                  <Clock size={13} />
+                  <span>Real-time visits this week</span>
+                </div>
               </div>
-              <div>
-                <h2 className="dash-shop-name">{shop.shopName}</h2>
-                <span className="dash-shop-category">
-                  {shop.category} Store
-                </span>
+
+              {/* Stat 2: Total inquiries received */}
+              <div className="analytics-stat-card" id="stat-card-inquiries">
+                <div className="analytics-stat-top">
+                  <div className="analytics-stat-icon analytics-icon-inquiries">
+                    <Mail size={22} />
+                  </div>
+                  <span className="analytics-stat-pill pill-blue">Inquiries</span>
+                </div>
+                <div className="analytics-stat-body">
+                  <div className="analytics-stat-value" id="stat-value-inquiries">
+                    {inquiries.length}
+                  </div>
+                  <div className="analytics-stat-label">Messages Received</div>
+                </div>
+                <div className="analytics-stat-footer">
+                  <MessageSquare size={13} />
+                  <span>
+                    {inquiries.filter((i) => (i.status || 'pending') === 'pending').length} pending response
+                  </span>
+                </div>
+              </div>
+
+              {/* Stat 3: Total reviews received and average rating */}
+              <div className="analytics-stat-card" id="stat-card-reviews">
+                <div className="analytics-stat-top">
+                  <div className="analytics-stat-icon analytics-icon-reviews">
+                    <Star size={22} />
+                  </div>
+                  <span className="analytics-stat-pill pill-amber">Rating</span>
+                </div>
+                <div className="analytics-stat-body">
+                  <div className="analytics-stat-value" id="stat-value-rating">
+                    {ratingStats.count > 0 ? `${ratingStats.avg} ★` : 'New'}
+                  </div>
+                  <div className="analytics-stat-label">Reviews & Rating</div>
+                </div>
+                <div className="analytics-stat-footer">
+                  <CheckCircle size={13} />
+                  <span>{ratingStats.count} total review{ratingStats.count === 1 ? '' : 's'}</span>
+                </div>
+              </div>
+
+              {/* Stat 4: Most viewed product */}
+              <div className="analytics-stat-card" id="stat-card-top-product">
+                <div className="analytics-stat-top">
+                  <div className="analytics-stat-icon analytics-icon-product">
+                    <Flame size={22} />
+                  </div>
+                  <span className="analytics-stat-pill pill-purple">Popular</span>
+                </div>
+                <div className="analytics-stat-body">
+                  <div
+                    className="analytics-stat-value"
+                    id="stat-value-top-product"
+                    title={mostViewedProduct?.name || 'No products yet'}
+                    style={{ fontSize: '1.25rem', paddingTop: '0.35rem' }}
+                  >
+                    {mostViewedProduct ? mostViewedProduct.name : 'No items yet'}
+                  </div>
+                  <div className="analytics-stat-label">Most Viewed Product</div>
+                </div>
+                <div className="analytics-stat-footer">
+                  <Package size={13} />
+                  <span>
+                    {mostViewedProduct
+                      ? `${mostViewedProduct.views || mostViewedProduct.viewCount || 0} customer views`
+                      : 'Catalog is empty'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Top Grid: Shop Info Card + Store QR Code Card */}
+        {shop ? (
+          <div className="dash-top-grid">
+            {/* Shop Details Card */}
+            <div className="dash-shop-card" id="shop-info-card">
+              <div className="dash-shop-header">
+                <div className="dash-shop-icon-box">
+                  {shop.category === 'Clothing' ? <Shirt size={28} /> : <Bike size={28} />}
+                </div>
+                <div>
+                  <h2 className="dash-shop-name">{shop.shopName}</h2>
+                  <span className="dash-shop-category">
+                    {shop.category} Store
+                  </span>
+                </div>
+              </div>
+
+              <div className="dash-shop-details">
+                <div className="dash-detail">
+                  <span className="dash-detail-label">
+                    <MapPin size={13} />
+                    Store Location
+                  </span>
+                  <span className="dash-detail-value">{shop.address || 'Address not set'}</span>
+                </div>
+                <div className="dash-detail">
+                  <span className="dash-detail-label">
+                    <FileText size={13} />
+                    Description
+                  </span>
+                  <span className="dash-detail-value">{shop.description || 'No description provided.'}</span>
+                </div>
               </div>
             </div>
 
-            <div className="dash-shop-details">
-              <div className="dash-detail">
-                <span className="dash-detail-label">
-                  <MapPin size={13} />
-                  Store Location
-                </span>
-                <span className="dash-detail-value">{shop.address || 'Address not set'}</span>
-              </div>
-              <div className="dash-detail">
-                <span className="dash-detail-label">
-                  <FileText size={13} />
-                  Description
-                </span>
-                <span className="dash-detail-value">{shop.description || 'No description provided.'}</span>
-              </div>
-            </div>
+            {/* Storefront QR Code Card with Download */}
+            <ShopQRCode
+              shopId={currentUser.uid}
+              shopName={shop.shopName}
+              shopCategory={shop.category}
+              size={170}
+            />
           </div>
         ) : (
           <div className="dash-empty">

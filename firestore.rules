@@ -43,10 +43,10 @@ service cloud.firestore {
       // Authenticated shop owners can create
       allow create: if isAuthenticated();
 
-      // Owner or Master Admin can update / delete
-      allow update, delete: if isAuthenticated() && (
-        resource.data.ownerId == request.auth.uid || isMasterAdmin()
-      );
+      // Owner or Master Admin can update / delete, or any visitor can update view counters
+      allow update: if (isAuthenticated() && (resource.data.ownerId == request.auth.uid || isMasterAdmin()))
+                    || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount', 'weeklyViews', 'lastViewedAt']);
+      allow delete: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isMasterAdmin());
     }
 
     // 3. Products Collection
@@ -57,10 +57,21 @@ service cloud.firestore {
       // Authenticated users can create
       allow create: if isAuthenticated();
 
-      // Shop owner or Master Admin can update / delete
-      allow update, delete: if isAuthenticated() && (
-        resource.data.shopId != null || isMasterAdmin()
-      );
+      // Shop owner or Master Admin can update / delete, or any visitor can increment view counters
+      allow update: if (isAuthenticated() && (resource.data.shopId != null || isMasterAdmin()))
+                    || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount', 'views', 'lastViewedAt']);
+      allow delete: if isAuthenticated() && (resource.data.shopId != null || isMasterAdmin());
+    }
+
+    // Analytics Collections (shopViews and productViews)
+    match /shopViews/{viewId} {
+      allow read: if true;
+      allow create: if true;
+    }
+
+    match /productViews/{viewId} {
+      allow read: if true;
+      allow create: if true;
     }
 
     // 4. Reviews Collection

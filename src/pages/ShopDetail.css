@@ -218,6 +218,18 @@
   background: var(--color-surface-subtle);
 }
 
+.qr-code-btn {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border-color: var(--color-primary-border);
+}
+
+.qr-code-btn:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary-hover);
+}
+
 /* ── Mini Stats Column ── */
 .shop-detail-stats {
   display: flex;

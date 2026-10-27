@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import {
   MapPin,
-  Store,
   Shirt,
   Bike,
   Phone,
@@ -13,14 +12,16 @@ import {
   Search as SearchIcon,
   X,
   Package,
-  CheckCircle,
   AlertCircle,
+  QrCode,
 } from 'lucide-react';
 import { db } from '../firebase/config';
 import Navbar from '../components/Navbar';
 import BrowseProductCard from '../components/BrowseProductCard';
 import ShopInquiryModal from '../components/ShopInquiryModal';
 import ShopReviewsSection, { StarRating } from '../components/ShopReviewsSection';
+import ShopQRCode from '../components/ShopQRCode';
+import { recordShopView } from '../utils/analytics';
 import './ShopDetail.css';
 
 function getShopCover(shop) {
@@ -48,6 +49,7 @@ function ShopDetail() {
 
   // Inquiry modal state
   const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
   // Rating stats state
   const [ratingStats, setRatingStats] = useState({ average: 0, count: 0 });
@@ -63,6 +65,9 @@ function ShopDetail() {
           return;
         }
         setShop({ id: shopSnap.id, ...shopSnap.data() });
+
+        // Increment profile view counter in Firestore
+        recordShopView(shopId);
 
         // Fetch products for this shop
         const q = query(
@@ -236,6 +241,17 @@ function ShopDetail() {
                   <span>Send Direct Inquiry</span>
                 </button>
 
+                <button
+                  type="button"
+                  className="contact-shop-btn qr-code-btn"
+                  onClick={() => setIsQRModalOpen(true)}
+                  id="open-shop-qr-btn"
+                  title="View & Download Shop QR Code"
+                >
+                  <QrCode size={17} />
+                  <span>Shop QR Code</span>
+                </button>
+
                 {shop.phone && (
                   <a
                     href={`tel:${shop.phone.replace(/\D/g, '')}`}
@@ -382,6 +398,17 @@ function ShopDetail() {
         onClose={() => setIsInquiryModalOpen(false)}
         shop={shop}
       />
+
+      {/* Shop QR Code Modal */}
+      {isQRModalOpen && (
+        <ShopQRCode
+          shopId={shop.id}
+          shopName={shop.shopName}
+          shopCategory={shop.category}
+          variant="modal"
+          onClose={() => setIsQRModalOpen(false)}
+        />
+      )}
     </>
   );
 }

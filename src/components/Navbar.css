@@ -167,6 +167,21 @@
   color: #ffffff;
 }
 
+.navbar-btn-install {
+  background: var(--color-primary-light);
+  border: 1px solid var(--color-primary-border);
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.navbar-btn-install:hover {
+  background: #ccfbf1;
+  color: var(--color-primary-hover);
+  border-color: var(--color-primary);
+}
+
 /* ── Mobile Hamburger ── */
 .navbar-mobile-toggle {
   display: none;

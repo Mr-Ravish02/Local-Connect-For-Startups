@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Store, Shield, LogOut, Menu, X, User } from 'lucide-react';
+import { Search, Store, Shield, LogOut, Menu, X, User, Smartphone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { ADMIN_EMAIL } from '../utils/constants';
 import './Navbar.css';
@@ -8,9 +8,47 @@ import './Navbar.css';
 function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
   const { currentUser, userRole, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+      setIsInstalled(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  async function handleInstallClick() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      alert('To install LocalHive on your phone: Tap your browser menu (⋮ or Share) and select "Add to Home Screen".');
+    }
+  }
 
   function handleSearchSubmit(e) {
     e.preventDefault();
@@ -137,6 +175,22 @@ function Navbar() {
                 Sign Up
               </Link>
             </>
+          )}
+
+          {!isInstalled && (
+            <button
+              type="button"
+              className="navbar-btn navbar-btn-install"
+              onClick={() => {
+                handleInstallClick();
+                setMobileMenuOpen(false);
+              }}
+              id="pwa-install-btn"
+              title="Install LocalHive App"
+            >
+              <Smartphone size={15} />
+              <span>Install App</span>
+            </button>
           )}
         </div>
       </div>
