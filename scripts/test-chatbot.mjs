@@ -64,34 +64,45 @@ async function testChatbotSystem() {
   } else {
     console.log(`   🔑 API Key detected (${groqApiKey.substring(0, 8)}...). Testing live Groq request with model "llama3-8b-8192"...`);
     
-    // Test call to Groq
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${groqApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama3-8b-8192',
-        messages: [
-          {
-            role: 'system',
-            content: `You are HiveBot for LocalHive. Here is our real database:\nShops: ${cycleShops.map((s) => s.shopName || s.name).join(', ')}.`,
-          },
-          { role: 'user', content: 'Which shops sell cycles nearby?' },
-        ],
-        max_tokens: 150,
-      }),
-    });
+    const modelsToTry = ['llama3-8b-8192', 'openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b'];
+    let succeeded = false;
 
-    const data = await response.json();
-    if (response.ok) {
-      console.log('   ✅ Live Groq Response received:');
-      console.log('   ---');
-      console.log(data.choices?.[0]?.message?.content);
-      console.log('   ---');
-    } else {
-      console.log('   ⚠️ Groq returned:', data);
+    for (const model of modelsToTry) {
+      console.log(`   Attempting model: "${model}"...`);
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${groqApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: 'system',
+              content: `You are HiveBot for LocalHive.\nClothing Shops: ${clothingShops.map((s) => s.shopName || s.name).join(', ')}.\nJackets in stock: ${jackets.length}.`,
+            },
+            { role: 'user', content: 'Is any clothing in stock?' },
+          ],
+          max_tokens: 150,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log(`   ✅ Live Groq Response received (model: ${model}):`);
+        console.log('   ---');
+        console.log(data.choices?.[0]?.message?.content);
+        console.log('   ---');
+        succeeded = true;
+        break;
+      } else {
+        console.log(`   ⚠️ Model "${model}" response:`, data.error?.message || data);
+      }
+    }
+
+    if (!succeeded) {
+      console.error('   ❌ All tested models failed on Groq API.');
     }
   }
 

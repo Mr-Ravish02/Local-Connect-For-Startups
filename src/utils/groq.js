@@ -3,9 +3,16 @@ import { db } from '../firebase/config';
 import { haversineDistance } from './geolocation';
 
 // Primary requested model with fallback support
-const PRIMARY_MODEL = 'llama3-8b-8192';
-const FALLBACK_MODELS = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'];
+const PRIMARY_MODEL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GROQ_MODEL) || 'llama3-8b-8192';
+const FALLBACK_MODELS = [
+  'openai/gpt-oss-20b',
+  'openai/gpt-oss-120b',
+  'qwen/qwen3.8-27b',
+];
 const GROQ_API_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
+
+// Cached working model to avoid repeated latency on decommissioned models
+let cachedWorkingModel = null;
 
 // In-memory catalog cache with 60-second TTL
 let cachedCatalog = null;
@@ -189,7 +196,10 @@ export async function sendGroqChatMessage({
   ];
 
   // 3. Attempt API call with requested model and fallback
-  const modelsToTry = [PRIMARY_MODEL, ...FALLBACK_MODELS];
+  const candidateModels = cachedWorkingModel
+    ? [cachedWorkingModel, PRIMARY_MODEL, ...FALLBACK_MODELS]
+    : [PRIMARY_MODEL, ...FALLBACK_MODELS];
+  const modelsToTry = [...new Set(candidateModels)];
   let lastError = null;
 
   for (const model of modelsToTry) {
@@ -211,6 +221,10 @@ export async function sendGroqChatMessage({
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMsg = errorData.error?.message || response.statusText;
+
+        if (cachedWorkingModel === model) {
+          cachedWorkingModel = null;
+        }
 
         // If the model is decommissioned or not found, try fallback model
         if (
@@ -241,12 +255,17 @@ export async function sendGroqChatMessage({
         data.choices?.[0]?.message?.content ||
         "I'm sorry, I couldn't generate a response. Please try again.";
 
+      cachedWorkingModel = model;
+
       return {
         success: true,
         reply,
         modelUsed: model,
       };
     } catch (err) {
+      if (cachedWorkingModel === model) {
+        cachedWorkingModel = null;
+      }
       console.warn(`Attempt with model ${model} threw error:`, err);
       lastError = err.message;
     }
