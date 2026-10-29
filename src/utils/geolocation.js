@@ -105,3 +105,39 @@ export function sortShopsByDistance(shops, userLat, userLon) {
       return a.distance - b.distance;
     });
 }
+
+/**
+ * Reverse geocode latitude and longitude to a human-readable address
+ * using OpenStreetMap's free Nominatim API.
+ *
+ * @param {number} lat - Latitude
+ * @param {number} lon - Longitude
+ * @returns {Promise<string>} Formatted address or empty string
+ */
+export async function reverseGeocode(lat, lon) {
+  if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon)) {
+    return '';
+  }
+
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+      {
+        headers: {
+          Accept: 'application/json',
+        },
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error(`Reverse geocoding error: HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data.display_name || '';
+  } catch (err) {
+    console.error('Reverse geocode failed:', err);
+    return '';
+  }
+}
+

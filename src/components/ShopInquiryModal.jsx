@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { collection, addDoc } from 'firebase/firestore';
 import { Mail, CheckCircle, X } from 'lucide-react';
 import { db } from '../firebase/config';
@@ -6,7 +7,6 @@ import { useAuth } from '../contexts/AuthContext';
 
 function ShopInquiryModal({ isOpen, onClose, shop }) {
   const [message, setMessage] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -17,18 +17,25 @@ function ShopInquiryModal({ isOpen, onClose, shop }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!message.trim()) return;
-
-    setSubmitting(true);
     setError('');
 
-    try {
-      const customerId = currentUser ? currentUser.uid : 'guest';
+    if (!currentUser) {
+      setError('Please log in to send a message');
+      return;
+    }
 
+    if (!message.trim()) {
+      setError('Please enter a message.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
       await addDoc(collection(db, 'inquiries'), {
         shopId: shop.id,
-        customerId,
-        customerEmail: currentUser?.email || customerEmail || 'Anonymous Customer',
+        ownerId: shop.ownerId || shop.id,
+        customerId: currentUser.uid,
+        customerEmail: currentUser.email || 'Customer',
         message: message.trim(),
         status: 'pending',
         createdAt: new Date().toISOString(),
@@ -36,7 +43,6 @@ function ShopInquiryModal({ isOpen, onClose, shop }) {
 
       setSuccess(true);
       setMessage('');
-      setCustomerEmail('');
       setTimeout(() => {
         setSuccess(false);
         onClose();
@@ -78,29 +84,77 @@ function ShopInquiryModal({ isOpen, onClose, shop }) {
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {error && (
-              <div style={{ padding: '0.75rem 1rem', borderRadius: '6px', background: 'var(--color-danger-light)', border: '1px solid var(--color-danger-border)', color: 'var(--color-danger)', fontSize: '0.88rem' }}>
-                {error}
+              <div
+                id="inquiry-error-box"
+                style={{
+                  padding: '0.75rem 1rem',
+                  borderRadius: '6px',
+                  background: 'var(--color-danger-light, #fee2e2)',
+                  border: '1px solid var(--color-danger-border, #fca5a5)',
+                  color: 'var(--color-danger, #dc2626)',
+                  fontSize: '0.88rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '1rem',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span>{error}</span>
+                {error.includes('log in') && (
+                  <Link
+                    to="/login"
+                    className="btn btn-primary"
+                    id="inquiry-error-login-btn"
+                    style={{ textDecoration: 'none', padding: '0.35rem 0.85rem', fontSize: '0.85rem' }}
+                  >
+                    Login
+                  </Link>
+                )}
               </div>
             )}
 
-            {!currentUser && (
-              <div className="form-group" style={{ margin: 0 }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.35rem', display: 'block' }}>
-                  Your Contact Information (email or phone)
-                </label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="e.g. customer@example.com or phone number"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  id="inquiry-customer-email"
-                />
+            {!currentUser && !error && (
+              <div
+                id="inquiry-login-prompt"
+                style={{
+                  padding: '0.75rem 1rem',
+                  borderRadius: '6px',
+                  background: 'var(--color-surface-subtle, #f8fafc)',
+                  border: '1px solid var(--color-border, #e2e8f0)',
+                  fontSize: '0.88rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '1rem',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span style={{ color: 'var(--color-text)', fontWeight: 500 }}>
+                  Please log in to send a message
+                </span>
+                <Link
+                  to="/login"
+                  className="btn btn-primary"
+                  id="inquiry-login-btn"
+                  style={{ textDecoration: 'none', padding: '0.35rem 0.85rem', fontSize: '0.85rem' }}
+                >
+                  Login
+                </Link>
               </div>
             )}
 
             <div className="form-group" style={{ margin: 0 }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.35rem', display: 'block' }}>
+              <label
+                htmlFor="inquiry-message-input"
+                style={{
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  color: 'var(--color-text)',
+                  marginBottom: '0.35rem',
+                  display: 'block',
+                }}
+              >
                 Your Message <span style={{ color: 'var(--color-primary)' }}>*</span>
               </label>
               <textarea
@@ -109,7 +163,7 @@ function ShopInquiryModal({ isOpen, onClose, shop }) {
                 placeholder="Ask about product availability, sizes, pricing, or custom requests…"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                required
+                required={Boolean(currentUser)}
                 id="inquiry-message-input"
               />
             </div>
@@ -126,7 +180,7 @@ function ShopInquiryModal({ isOpen, onClose, shop }) {
               <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={submitting || !message.trim()}
+                disabled={submitting || (Boolean(currentUser) && !message.trim())}
                 id="submit-inquiry-btn"
               >
                 {submitting ? 'Sending…' : 'Send Message'}

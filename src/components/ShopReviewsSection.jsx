@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
 import { Star, MessageSquare, Edit3, User, CheckCircle } from 'lucide-react';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
+import './ShopReviewsSection.css';
 
 function StarRating({ rating, setRating, readOnly = false, size = '1.2rem' }) {
   const [hoverRating, setHoverRating] = useState(0);
@@ -106,6 +108,10 @@ function ShopReviewsSection({ shopId, onRatingUpdate }) {
     setFormError('');
     setFormSuccess('');
 
+    if (!currentUser) {
+      return setFormError('Please log in to leave a review');
+    }
+
     if (!rating || rating < 1 || rating > 5) {
       return setFormError('Please select a star rating from 1 to 5.');
     }
@@ -115,13 +121,10 @@ function ShopReviewsSection({ shopId, onRatingUpdate }) {
 
     setSubmitting(true);
     try {
-      const customerId = currentUser ? currentUser.uid : 'guest';
-      const customerEmail = currentUser?.email || 'Customer';
-
       await addDoc(collection(db, 'reviews'), {
         shopId,
-        customerId,
-        customerEmail,
+        customerId: currentUser.uid,
+        customerEmail: currentUser.email || 'Customer',
         rating: Number(rating),
         comment: comment.trim(),
         createdAt: new Date().toISOString(),
@@ -179,8 +182,27 @@ function ShopReviewsSection({ shopId, onRatingUpdate }) {
           Write a Customer Review
         </h4>
 
-        {formError && <div className="review-alert error">{formError}</div>}
+        {formError && (
+          <div className="review-alert error" id="review-form-error">
+            <span>{formError}</span>
+            {formError.includes('log in') && (
+              <Link to="/login" className="btn btn-primary btn-sm" id="review-error-login-btn">
+                Login
+              </Link>
+            )}
+          </div>
+        )}
+
         {formSuccess && <div className="review-alert success">{formSuccess}</div>}
+
+        {!currentUser && !formError && (
+          <div className="review-login-prompt" id="review-login-prompt">
+            <span>Please log in to leave a review</span>
+            <Link to="/login" className="btn btn-primary btn-sm" id="review-login-btn">
+              Login
+            </Link>
+          </div>
+        )}
 
         <form onSubmit={handleSubmitReview}>
           <div className="form-group" style={{ marginBottom: '1.25rem' }}>
@@ -201,14 +223,14 @@ function ShopReviewsSection({ shopId, onRatingUpdate }) {
               placeholder="Tell others about the product quality, pricing, customer service, or shop atmosphere…"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              required
+              required={Boolean(currentUser)}
             />
           </div>
 
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={submitting || !comment.trim()}
+            disabled={submitting || (Boolean(currentUser) && !comment.trim())}
             id="submit-review-btn"
           >
             {submitting ? 'Posting Review…' : 'Submit Review'}
